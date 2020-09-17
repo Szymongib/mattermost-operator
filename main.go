@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"github.com/mattermost/mattermost-operator/controllers/clusterinstallation"
 	"os"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -28,7 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	mattermostcomv1alpha1 "github.com/mattermost/mattermost-operator/api/v1alpha1"
-	"github.com/mattermost/mattermost-operator/controllers"
+	"github.com/mattermost/mattermost-operator/controllers/mattermostrestoredb"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -67,20 +68,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.MattermostRestoreDBReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("MattermostRestoreDB"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "MattermostRestoreDB")
-		os.Exit(1)
-	}
-	if err = (&controllers.ClusterInstallationReconciler{
+	if err = (&clusterinstallation.ClusterInstallationReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("ClusterInstallation"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ClusterInstallation")
+		os.Exit(1)
+	}
+	if err = (&mattermostrestoredb.MattermostRestoreDBReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("MattermostRestoreDB"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "MattermostRestoreDB")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

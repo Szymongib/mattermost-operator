@@ -16,8 +16,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/api/v1alpha1"
@@ -31,6 +29,9 @@ type ClusterInstallationReconciler struct {
 	Scheme *runtime.Scheme
 }
 
+// +kubebuilder:rbac:groups=mattermost.com,resources=clusterinstallations,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=mattermost.com,resources=clusterinstallations/status,verbs=get;update;patch
+
 func (r *ClusterInstallationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&mattermostv1alpha1.ClusterInstallation{}).
@@ -40,14 +41,6 @@ func (r *ClusterInstallationReconciler) SetupWithManager(mgr ctrl.Manager) error
 		Owns(&appsv1.Deployment{}).
 		Complete(r)
 }
-
-// newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ClusterInstallationReconciler{Client: mgr.GetClient(), Scheme: mgr.GetScheme(), Log: logf.Log.WithName("clusterinstallation.controller")}
-}
-
-// +kubebuilder:rbac:groups=mattermost.com,resources=clusterinstallations,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=mattermost.com,resources=clusterinstallations/status,verbs=get;update;patch
 
 // Reconcile reads the state of the cluster for a ClusterInstallation object and
 // makes changes to obtain the exact state defined in `ClusterInstallation.Spec`.
