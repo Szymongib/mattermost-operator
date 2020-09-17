@@ -1,0 +1,48 @@
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - mattermost.com
+  resources:
+  - clusterinstallations
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - mattermost.com
+  resources:
+  - clusterinstallations/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - mattermost.com.mattermost.com
+  resources:
+  - mattermostrestoredbs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - mattermost.com.mattermost.com
+  resources:
+  - mattermostrestoredbs/status
+  verbs:
+  - get
+  - patch
+  - update
