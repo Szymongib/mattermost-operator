@@ -27,7 +27,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - mattermost.com.mattermost.com
+  - mattermost.com
   resources:
   - mattermostrestoredbs
   verbs:
@@ -39,7 +39,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - mattermost.com.mattermost.com
+  - mattermost.com
   resources:
   - mattermostrestoredbs/status
   verbs:

@@ -27,9 +27,8 @@ type MattermostRestoreDBReconciler struct {
 	Log    logr.Logger
 	Scheme *runtime.Scheme
 
-	state  mattermostv1alpha1.RestoreState
+	state mattermostv1alpha1.RestoreState
 }
-
 
 // +kubebuilder:rbac:groups=mattermost.com,resources=mattermostrestoredbs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=mattermost.com,resources=mattermostrestoredbs/status,verbs=get;update;patch

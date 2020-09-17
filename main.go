@@ -1,31 +1,19 @@
-/*
-
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/mattermost/mattermost-operator/controllers/clusterinstallation"
 	"os"
+	"runtime"
 
-	"k8s.io/apimachinery/pkg/runtime"
+	blubr "github.com/mattermost/blubr"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	mattermostcomv1alpha1 "github.com/mattermost/mattermost-operator/api/v1alpha1"
@@ -34,8 +22,16 @@ import (
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme = k8sruntime.NewScheme()
+)
+
+// Change below variables to serve metrics on different host or port.
+// Or use "metrics-addr" flag
+var (
+	// metricsHost specifies host to bind to for serving prometheus metrics
+	metricsHost = "0.0.0.0"
+	// metricsPort specifies port to bind to for serving prometheus metrics
+	metricsPort int32 = 8383
 )
 
 func init() {
@@ -48,7 +44,7 @@ func init() {
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
-	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
+	flag.StringVar(&metricsAddr, "metrics-addr", fmt.Sprintf("%s:%d", metricsHost, metricsPort), "The address the metric endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
@@ -56,24 +52,35 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
+	// Setup logging.
+	// This logger wraps logrus in a 'logr.Logger' interface. This is required
+	// for the deferred logging required by the various operator packages.
+	logger := blubr.InitLogger()
+	logger = logger.WithName("opr")
+	logf.SetLogger(logger)
+
+	logger.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
+	logger.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
 		MetricsBindAddress: metricsAddr,
-		Port:               9443,
 		LeaderElection:     enableLeaderElection,
 		LeaderElectionID:   "b78a986e.mattermost.com",
 	})
 	if err != nil {
-		setupLog.Error(err, "unable to start manager")
+		logger.Error(err, "Unable to start manager")
 		os.Exit(1)
 	}
+
+	logger.Info("Registering Components")
 
 	if err = (&clusterinstallation.ClusterInstallationReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("ClusterInstallation"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ClusterInstallation")
+		logger.Error(err, "Unable to create controller", "controller", "ClusterInstallation")
 		os.Exit(1)
 	}
 	if err = (&mattermostrestoredb.MattermostRestoreDBReconciler{
@@ -81,14 +88,14 @@ func main() {
 		Log:    ctrl.Log.WithName("controllers").WithName("MattermostRestoreDB"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "MattermostRestoreDB")
+		logger.Error(err, "Unable to create controller", "controller", "MattermostRestoreDB")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
 
-	setupLog.Info("starting manager")
+	logger.Info("Starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		setupLog.Error(err, "problem running manager")
+		logger.Error(err, "Problem running manager")
 		os.Exit(1)
 	}
 }

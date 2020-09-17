@@ -24,12 +24,12 @@ import (
 
 	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/api/v1alpha1"
 	minioOperator "github.com/minio/minio-operator/pkg/apis/miniocontroller/v1beta1"
+	v1beta1Minio "github.com/minio/minio-operator/pkg/apis/miniocontroller/v1beta1"
 	mysqlOperator "github.com/presslabs/mysql-operator/pkg/apis/mysql/v1alpha1"
+	v1alpha1MySQL "github.com/presslabs/mysql-operator/pkg/apis/mysql/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1beta1Minio "github.com/minio/minio-operator/pkg/apis/miniocontroller/v1beta1"
-	v1alpha1MySQL "github.com/presslabs/mysql-operator/pkg/apis/mysql/v1alpha1"
 )
 
 func TestReconcile(t *testing.T) {
