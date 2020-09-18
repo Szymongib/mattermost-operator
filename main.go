@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/mattermost/mattermost-operator/controllers/clusterinstallation"
+	v1beta1Minio "github.com/minio/minio-operator/pkg/apis/miniocontroller/v1beta1"
 	"os"
 	"runtime"
 
@@ -15,7 +16,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
+	v1alpha1MySQL "github.com/presslabs/mysql-operator/pkg/apis/mysql/v1alpha1"
 	mattermostcomv1alpha1 "github.com/mattermost/mattermost-operator/api/v1alpha1"
 	"github.com/mattermost/mattermost-operator/controllers/mattermostrestoredb"
 	// +kubebuilder:scaffold:imports
@@ -39,6 +40,9 @@ func init() {
 
 	utilruntime.Must(mattermostcomv1alpha1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
+
+	utilruntime.Must(v1beta1Minio.AddToScheme(scheme))
+	utilruntime.Must(v1alpha1MySQL.SchemeBuilder.AddToScheme(scheme))
 }
 
 func main() {

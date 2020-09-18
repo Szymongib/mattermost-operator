@@ -1,7 +1,7 @@
-apiVersion: mattermost.com.mattermost.com/v1alpha1
+apiVersion: mattermost.com/v1alpha1
 kind: MattermostRestoreDB
 metadata:
-  name: mattermostrestoredb-sample
+  name: example-mattermostrestoredb
 spec:
   initBucketURL: s3://my-sample/my-backup.gz
   mattermostClusterName: myMMClusterInstallation
