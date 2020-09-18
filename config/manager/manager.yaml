@@ -3,13 +3,13 @@ kind: Namespace
 metadata:
   labels:
     control-plane: controller-manager
-  name: system
+  name: mattermost-operator
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: controller-manager
-  namespace: system
+  name: mattermost-operator
+  namespace: mattermost-operator
   labels:
     control-plane: controller-manager
 spec:
@@ -22,14 +22,15 @@ spec:
       labels:
         control-plane: controller-manager
     spec:
+      serviceAccountName: mattermost-operator
       containers:
       - command:
         - /manager
         args:
         - --enable-leader-election
-        image: controller:latest
-        imagePullPolicy: Never
-        name: manager
+        image: mattermost-operator
+        imagePullPolicy: IfNotPresent
+        name: mattermost-operator
         resources:
           limits:
             cpu: 100m
