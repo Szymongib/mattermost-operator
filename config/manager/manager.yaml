@@ -5,6 +5,11 @@ metadata:
     control-plane: controller-manager
   name: mattermost-operator
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mattermost-operator
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,7 +30,7 @@ spec:
       serviceAccountName: mattermost-operator
       containers:
       - command:
-        - /manager
+        - /mattermost-operator
         args:
         - --enable-leader-election
         image: mattermost-operator

@@ -102,7 +102,7 @@ gofmt: ## Validates gofmt against all packages.
 	done
 	@echo "gofmt success"; \
 
-yaml: ## Generate the YAML file for easy operator installation
+yaml: manifests ## Generate the YAML file for easy operator installation
 	cd config/manager && $(KUSTOMIZE) edit set image mattermost-operator="mattermost/mattermost-operator:latest"
 
 	kustomize build config/default > $(INSTALL_YAML)

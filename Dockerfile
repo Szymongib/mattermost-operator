@@ -5,21 +5,13 @@ ARG BASE_IMAGE=gcr.io/distroless/static:nonroot
 FROM ${BUILD_IMAGE} as builder
 
 WORKDIR /workspace
-# Copy the Go Modules manifests
-COPY go.mod go.mod
-COPY go.sum go.sum
-# cache deps before building and copying source so that we don't need to re-download as much
-# and so that source changes don't invalidate our downloaded layer
-RUN go mod download
+COPY . .
 
-# Copy the go source
-COPY main.go main.go
-COPY api/ api/
-COPY controllers/ controllers/
-COPY pkg/ pkg/
+RUN mkdir -p licenses
+COPY LICENSE /workspace/licenses
 
 # Build
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o manager main.go
+RUN make build
 
 FROM ${BASE_IMAGE}
 
@@ -35,9 +27,10 @@ LABEL name="Mattermost Operator" \
   summary="Quick and easy Mattermost setup" \
   description="Mattermost operator deploys and configures Mattermost installations, and assists with maintenance/upgrade operations."
 
-
 WORKDIR /
-COPY --from=builder /workspace/manager .
+COPY --from=builder /workspace/licenses .
+COPY --from=builder /workspace/build/_output/bin/mattermost-operator .
+
 USER nonroot:nonroot
 
-ENTRYPOINT ["/manager"]
+ENTRYPOINT ["/mattermost-operator"]
