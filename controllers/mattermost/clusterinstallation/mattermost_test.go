@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	blubr "github.com/mattermost/blubr"
-	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/api/v1alpha1"
+	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
 	mattermostmysql "github.com/mattermost/mattermost-operator/pkg/components/mysql"
 	"github.com/mattermost/mattermost-operator/pkg/database"
 	operatortest "github.com/mattermost/mattermost-operator/test"

@@ -13,7 +13,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	mattermostcomv1alpha1 "github.com/mattermost/mattermost-operator/api/v1alpha1"
+	mattermostcomv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 

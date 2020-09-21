@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	"github.com/go-logr/logr"
-	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/api/v1alpha1"
+	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	v1beta1 "k8s.io/api/extensions/v1beta1"

@@ -17,7 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	k8sClient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/api/v1alpha1"
+	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
 	"github.com/mattermost/mattermost-operator/pkg/database"
 	mattermostApp "github.com/mattermost/mattermost-operator/pkg/mattermost"
 )

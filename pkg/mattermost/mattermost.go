@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/api/v1alpha1"
+	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
 	"github.com/mattermost/mattermost-operator/pkg/components/utils"
 	"github.com/mattermost/mattermost-operator/pkg/database"
 

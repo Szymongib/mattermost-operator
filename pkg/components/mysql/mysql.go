@@ -3,7 +3,7 @@ package mysql
 import (
 	"fmt"
 
-	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/api/v1alpha1"
+	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
 	"github.com/mattermost/mattermost-operator/pkg/utils"
 	mysqlOperator "github.com/presslabs/mysql-operator/pkg/apis/mysql/v1alpha1"
 

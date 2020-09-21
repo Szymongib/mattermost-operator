@@ -25,7 +25,7 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
-SDK_VERSION = v1.0.0
+SDK_VERSION = v1.0.1
 MACHINE = $(shell uname -m)
 BUILD_IMAGE = golang:1.14.6
 BASE_IMAGE = gcr.io/distroless/static:nonroot

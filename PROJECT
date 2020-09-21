@@ -1,5 +1,6 @@
 domain: mattermost.com
 layout: go.kubebuilder.io/v2
+multigroup: true
 projectName: mattermost-operator
 repo: github.com/mattermost/mattermost-operator
 resources:

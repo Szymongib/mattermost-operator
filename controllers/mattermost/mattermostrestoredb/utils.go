@@ -8,7 +8,7 @@ import (
 	"reflect"
 
 	"github.com/go-logr/logr"
-	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/api/v1alpha1"
+	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
 )
 
 func (r *MattermostRestoreDBReconciler) updateStatus(mattermost *mattermostv1alpha1.MattermostRestoreDB, status mattermostv1alpha1.MattermostRestoreDBStatus, reqLogger logr.Logger) error {

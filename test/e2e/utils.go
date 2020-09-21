@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	operator "github.com/mattermost/mattermost-operator/api/v1alpha1"
+	operator "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
 
 	mysqlOperator "github.com/presslabs/mysql-operator/pkg/apis/mysql/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"

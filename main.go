@@ -3,14 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/mattermost/mattermost-operator/controllers/clusterinstallation"
+	"github.com/mattermost/mattermost-operator/controllers/mattermost/clusterinstallation"
 	v1beta1Minio "github.com/minio/minio-operator/pkg/apis/miniocontroller/v1beta1"
 	"os"
 	"runtime"
 
 	blubr "github.com/mattermost/blubr"
-	mattermostcomv1alpha1 "github.com/mattermost/mattermost-operator/api/v1alpha1"
-	"github.com/mattermost/mattermost-operator/controllers/mattermostrestoredb"
+	mattermostcomv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
+	"github.com/mattermost/mattermost-operator/controllers/mattermost/mattermostrestoredb"
 	v1alpha1MySQL "github.com/presslabs/mysql-operator/pkg/apis/mysql/v1alpha1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"

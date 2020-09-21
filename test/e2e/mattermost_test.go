@@ -3,7 +3,7 @@ package e2e
 import (
 	"context"
 	"fmt"
-	operator "github.com/mattermost/mattermost-operator/api/v1alpha1"
+	operator "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
 	"github.com/mattermost/mattermost-operator/pkg/components/utils"
 	operatortest "github.com/mattermost/mattermost-operator/test"
 	appsv1 "k8s.io/api/apps/v1"
