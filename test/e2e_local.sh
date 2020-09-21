@@ -11,17 +11,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 CLUSTER_NAME=${CLUSTER_NAME:-kind}
 
-# Create Kind cluster if does not exist
-if [[ $(kind get clusters | grep ${CLUSTER_NAME}) ]]; then
-    echo "Kind cluster already exist."
-else
-    echo "Creating Kind cluster"
-    kind create cluster --config ${DIR}/kind-config.yaml --name ${CLUSTER_NAME}
-fi
+echo "Creating Kind cluster"
+kind create cluster --config ${DIR}/kind-config.yaml --name ${CLUSTER_NAME}
 
 # Use Kind cluster kubeconfig
 kind export kubeconfig --name ${CLUSTER_NAME}
 
 source ${DIR}/setup_test.sh
 
-go test ./test/e2e --timeout 30m
+go test ./test/e2e --timeout 40m -v
