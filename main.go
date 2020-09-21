@@ -9,6 +9,9 @@ import (
 	"runtime"
 
 	blubr "github.com/mattermost/blubr"
+	mattermostcomv1alpha1 "github.com/mattermost/mattermost-operator/api/v1alpha1"
+	"github.com/mattermost/mattermost-operator/controllers/mattermostrestoredb"
+	v1alpha1MySQL "github.com/presslabs/mysql-operator/pkg/apis/mysql/v1alpha1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -16,9 +19,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	v1alpha1MySQL "github.com/presslabs/mysql-operator/pkg/apis/mysql/v1alpha1"
-	mattermostcomv1alpha1 "github.com/mattermost/mattermost-operator/api/v1alpha1"
-	"github.com/mattermost/mattermost-operator/controllers/mattermostrestoredb"
 	// +kubebuilder:scaffold:imports
 )
 

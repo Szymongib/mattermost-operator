@@ -28,7 +28,7 @@ var (
 	// retryInterval is an interval between check attempts
 	retryInterval = time.Second * 5
 	// timeout to wait for k8s objects to be created
-	timeout              = time.Second * 900
+	timeout = time.Second * 900
 
 	mmNamespace = "mattermost-operator-system" // TODO: adjust
 )
@@ -160,7 +160,6 @@ func mattermostScaleTest(t *testing.T, k8sClient client.Client, k8sTypedClient k
 	err = waitForReconcilicationComplete(t, k8sClient, mmNamespace, "test-mm", retryInterval, timeout)
 	require.NoError(t, err)
 }
-
 
 func mattermostUpgradeTest(t *testing.T, k8sClient client.Client, k8sTypedClient kubernetes.Interface) {
 	testName := "test-mm2"
