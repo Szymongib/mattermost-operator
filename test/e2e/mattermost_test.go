@@ -30,7 +30,7 @@ var (
 	// timeout to wait for k8s objects to be created
 	timeout = time.Second * 900
 
-	mmNamespace = "mattermost-operator-system" // TODO: adjust
+	mmNamespace = "mattermost-operator"
 )
 
 func TestMattermost(t *testing.T) {
@@ -52,8 +52,7 @@ func TestMattermost(t *testing.T) {
 		require.NoError(t, err)
 	})
 	t.Run("mattermost operator ready", func(t *testing.T) {
-		// TODO: adjust name
-		err = waitForDeployment(t, k8sTypedClient, mmNamespace, "mattermost-operator-controller-manager", 1, retryInterval, timeout)
+		err = waitForDeployment(t, k8sTypedClient, mmNamespace, "mattermost-operator", 1, retryInterval, timeout)
 		require.NoError(t, err)
 	})
 
@@ -113,11 +112,6 @@ func mattermostScaleTest(t *testing.T, k8sClient client.Client, k8sTypedClient k
 		},
 	}
 
-	defer func() {
-		err := k8sClient.Delete(context.TODO(), exampleMattermost)
-		require.NoError(t, err)
-	}()
-
 	err := k8sClient.Create(context.TODO(), exampleMattermost)
 	require.NoError(t, err)
 
@@ -158,6 +152,9 @@ func mattermostScaleTest(t *testing.T, k8sClient client.Client, k8sTypedClient k
 	require.NoError(t, err)
 
 	err = waitForReconcilicationComplete(t, k8sClient, mmNamespace, "test-mm", retryInterval, timeout)
+	require.NoError(t, err)
+
+	err = k8sClient.Delete(context.TODO(), exampleMattermost)
 	require.NoError(t, err)
 }
 
@@ -207,10 +204,6 @@ func mattermostUpgradeTest(t *testing.T, k8sClient client.Client, k8sTypedClient
 			},
 		},
 	}
-	defer func() {
-		err := k8sClient.Delete(context.TODO(), exampleMattermost)
-		require.NoError(t, err)
-	}()
 
 	err := k8sClient.Create(context.TODO(), exampleMattermost)
 	require.NoError(t, err)
@@ -269,6 +262,9 @@ func mattermostUpgradeTest(t *testing.T, k8sClient client.Client, k8sTypedClient
 	err = k8sClient.Get(context.TODO(), types.NamespacedName{Name: testName, Namespace: mmNamespace}, mmDeployment)
 	require.NoError(t, err)
 	require.Equal(t, "mattermost/mattermost-enterprise-edition:"+operatortest.LatestStableMattermostVersion, mmDeployment.Spec.Template.Spec.Containers[0].Image)
+
+	err = k8sClient.Delete(context.TODO(), exampleMattermost)
+	require.NoError(t, err)
 }
 
 func mattermostWithMySQLReplicas(t *testing.T, client client.Client, typedClient kubernetes.Interface) {

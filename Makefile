@@ -136,7 +136,7 @@ uninstall: manifests kustomize ## Uninstall CRDs from a cluster
 	$(KUSTOMIZE) build config/crd | kubectl delete -f -
 
 deploy: manifests kustomize ## Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${OPERATOR_IMAGE}
+	cd config/manager && $(KUSTOMIZE) edit set image mattermost-operator="mattermost/mattermost-operator:test"
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 manifests: controller-gen ## Generate  CRDs
