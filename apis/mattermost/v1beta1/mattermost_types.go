@@ -21,6 +21,7 @@ import (
 ////////////////////////////////////////////////////////////////////////////////
 
 // MattermostSpec defines the desired state of Mattermost
+// +k8s:openapi-gen=true
 type MattermostSpec struct {
 	// Size defines the size of the Mattermost. This is typically specified in
 	// number of users. This will override replica and resource requests/limits
@@ -103,28 +104,46 @@ type Advanced struct {
 
 // Database defines the database configuration for Mattermost.
 type Database struct {
+	External        *ExternalDatabase        `json:"external,omitempty"`
+	OperatorManaged *OperatorManagedDatabase `json:"operatorManaged,omitempty"`
+
+	// TODO: clean this up
+	//// Optionally enter the name of an already-existing Secret for connecting to
+	//// the database. This secret should be configured as follows:
+	////
+	//// User-Managed Database
+	////   - Key: DB_CONNECTION_STRING | Value: <FULL_DATABASE_CONNECTION_STRING>
+	//// Operator-Managed Database
+	////   - Key: ROOT_PASSWORD | Value: <ROOT_DATABASE_PASSWORD>
+	////   - Key: USER | Value: <USER_NAME>
+	////   - Key: PASSWORD | Value: <USER_PASSWORD>
+	////   - Key: DATABASE Value: <DATABASE_NAME>
+	////
+	//// Notes:
+	////   If you define all secret values for both User-Managed and
+	////   Operator-Managed database types, the User-Managed connection string will
+	////   take precedence and the Operator-Managed values will be ignored. If the
+	////   secret is left blank, the default behavior is to use an Operator-Managed
+	////   database with strong randomly-generated database credentials.
+	//// +optional
+	//Secret string `json:"secret,omitempty"`
+}
+
+type ExternalDatabase struct {
+	// TODO: make it better
+	// TODO: optional fields?
+	// Secret contains data necessary to connect to the external database.
+	// The Kubernetes Secret should contain:
+	//   - Key: DB_CONNECTION_STRING | Value: <FULL_DATABASE_CONNECTION_STRING>
+	Secret string `json:"secret,omitempty"`
+}
+
+type OperatorManagedDatabase struct {
+	// TODO: do I need secret here?
+
 	// Defines the type of database to use for an Operator-Managed database. This
 	// value is ignored when using a User-Managed database.
 	Type string `json:"type,omitempty"`
-	// Optionally enter the name of an already-existing Secret for connecting to
-	// the database. This secret should be configured as follows:
-	//
-	// User-Managed Database
-	//   - Key: DB_CONNECTION_STRING | Value: <FULL_DATABASE_CONNECTION_STRING>
-	// Operator-Managed Database
-	//   - Key: ROOT_PASSWORD | Value: <ROOT_DATABASE_PASSWORD>
-	//   - Key: USER | Value: <USER_NAME>
-	//   - Key: PASSWORD | Value: <USER_PASSWORD>
-	//   - Key: DATABASE Value: <DATABASE_NAME>
-	//
-	// Notes:
-	//   If you define all secret values for both User-Managed and
-	//   Operator-Managed database types, the User-Managed connection string will
-	//   take precedence and the Operator-Managed values will be ignored. If the
-	//   secret is left blank, the default behavior is to use an Operator-Managed
-	//   database with strong randomly-generated database credentials.
-	// +optional
-	Secret string `json:"secret,omitempty"`
 	// Defines the storage size for the database. ie 50Gi
 	// +optional
 	// +kubebuilder:validation:Pattern=^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
@@ -133,7 +152,7 @@ type Database struct {
 	// For redundancy use at least 2 replicas.
 	// Setting this will override the number of replicas set by 'Size'.
 	// +optional
-	Replicas int32 `json:"replicas,omitempty"`
+	Replicas *int32 `json:"replicas,omitempty"`
 	// Defines the resource requests and limits for the database pods.
 	// +optional
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
@@ -160,21 +179,11 @@ type Database struct {
 
 // Filestore defines the filestore configuration for Mattermost.
 type Filestore struct {
-	// Defines the storage size for Minio. ie 50Gi
-	// +optional
-	// +kubebuilder:validation:Pattern=^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
-	StorageSize string `json:"storageSize,omitempty"`
-	// Defines the number of Minio replicas.
-	// Supply 1 to run Minio in standalone mode with no redundancy.
-	// Supply 4 or more to run Minio in distributed mode.
-	// Note that it is not possible to upgrade Minio from standalone to distributed mode.
-	// Setting this will override the number of replicas set by 'Size'.
-	// More info: https://docs.min.io/docs/distributed-minio-quickstart-guide.html
-	// +optional
-	Replicas int32 `json:"replicas,omitempty"`
-	// Defines the resource requests and limits for the Minio pods.
-	// +optional
-	Resources v1.ResourceRequirements `json:"resources,omitempty"`
+	External        *ExternalFilestore    `json:"external,omitempty"`
+	OperatorManaged *OperatorManagedMinio `json:"operatorManaged,omitempty"`
+}
+
+type ExternalFilestore struct {
 	// Set to use an external MinIO deployment or S3. Must also set 'Secret' and 'ExternalBucket'.
 	// +optional
 	ExternalURL string `json:"externalURL,omitempty"`
@@ -186,6 +195,24 @@ type Filestore struct {
 	// Required when "ExternalURL" is set.
 	// +optional
 	Secret string `json:"secret,omitempty"`
+}
+
+type OperatorManagedMinio struct {
+	// Defines the storage size for Minio. ie 50Gi
+	// +optional
+	// +kubebuilder:validation:Pattern=^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+	StorageSize string `json:"storageSize,omitempty"`
+	// Defines the number of Minio replicas.
+	// Supply 1 to run Minio in standalone mode with no redundancy.
+	// Supply 4 or more to run Minio in distributed mode.
+	// Note that it is not possible to upgrade Minio from standalone to distributed mode.
+	// Setting this will override the number of replicas set by 'Size'.
+	// More info: https://docs.min.io/docs/distributed-minio-quickstart-guide.html
+	// +optional
+	Replicas *int32 `json:"replicas,omitempty"`
+	// Defines the resource requests and limits for the Minio pods.
+	// +optional
+	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 // ElasticSearch defines the ElasticSearch configuration for Mattermost.
@@ -235,11 +262,12 @@ type MattermostStatus struct {
 	UpdatedReplicas int32 `json:"updatedReplicas,omitempty"`
 }
 
-// +kubebuilder:object:root=true
-// +kubebuilder:subresource:status
+// +genclient
 
 // Mattermost is the Schema for the mattermosts API
+// +k8s:openapi-gen=true
 // +kubebuilder:object:root=true
+// +kubebuilder:resource:shortName="mm"
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:priority=0,name="State",type=string,JSONPath=".status.state",description="State of Mattermost"
 // +kubebuilder:printcolumn:priority=0,name="Image",type=string,JSONPath=".status.image",description="Image of Mattermost"
