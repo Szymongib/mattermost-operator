@@ -20,7 +20,7 @@ import (
 
 const updateJobName = "mattermost-update-check"
 
-func (r *MattermostReconciler) checkMattermost(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error {
+func (r *MattermostReconciler) checkMattermost(mattermost *mattermostv1beta1.Mattermost, dbInfo mattermostApp.DatabaseInfo, reqLogger logr.Logger) error {
 	reqLogger = reqLogger.WithValues("Reconcile", "mattermost")
 
 	err := r.checkMattermostService(mattermost, mattermost.Name, mattermost.GetProductionDeploymentName(), reqLogger)
@@ -48,7 +48,7 @@ func (r *MattermostReconciler) checkMattermost(mattermost *mattermostv1beta1.Mat
 		}
 	}
 
-	err = r.checkMattermostDeployment(mattermost, mattermost.Name, mattermost.Spec.IngressName, mattermost.Name, mattermost.GetImageName(), reqLogger)
+	err = r.checkMattermostDeployment(mattermost, dbInfo, reqLogger)
 	if err != nil {
 		return err
 	}
@@ -156,12 +156,8 @@ func (r *MattermostReconciler) checkMattermostIngress(mattermost *mattermostv1be
 	return r.update(current, desired, reqLogger)
 }
 
-func (r *MattermostReconciler) checkMattermostDeployment(mattermost *mattermostv1beta1.Mattermost, resourceName, ingressName, saName, imageName string, reqLogger logr.Logger) error {
-	dbInfo, err := r.checkDatabaseSecret(mattermost, reqLogger)
-	if err != nil {
-		return errors.Wrap(err, "failed to check database secret")
-	}
-
+func (r *MattermostReconciler) checkMattermostDeployment(mattermost *mattermostv1beta1.Mattermost, dbInfo mattermostApp.DatabaseInfo, reqLogger logr.Logger) error {
+	var err error
 	var minioURL string
 	if mattermost.Spec.Filestore.IsExternal() {
 		minioURL = mattermost.Spec.Filestore.External.URL
@@ -173,13 +169,21 @@ func (r *MattermostReconciler) checkMattermostDeployment(mattermost *mattermostv
 	}
 
 	if mattermost.Spec.LicenseSecret != "" {
-		err = r.checkSecret(mattermost.Spec.LicenseSecret, "license", mattermost.Namespace)
+		err := r.checkSecret(mattermost.Spec.LicenseSecret, "license", mattermost.Namespace)
 		if err != nil {
 			return errors.Wrap(err, "failed to get mattermost license secret.")
 		}
 	}
 
-	desired := mattermostApp.GenerateDeploymentV1Beta(mattermost, dbInfo, resourceName, ingressName, saName, imageName, minioURL)
+	desired := mattermostApp.GenerateDeploymentV1Beta(
+		mattermost,
+		dbInfo,
+		mattermost.Name,
+		mattermost.Spec.IngressName,
+		mattermost.Name,
+		mattermost.GetImageName(),
+		minioURL,
+	)
 
 	err = r.checkMattermostDBSetupJob(mattermost, desired, reqLogger)
 	if err != nil {
