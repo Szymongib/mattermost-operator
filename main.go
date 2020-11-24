@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/mattermost/mattermost-operator/controllers/mattermost/mattermost"
 	"os"
 	"runtime"
 	"time"
@@ -113,6 +114,18 @@ func main() {
 		logger.Error(err, "Unable to create controller", "controller", "MattermostRestoreDB")
 		os.Exit(1)
 	}
+	if err = (&mattermost.MattermostReconciler{
+		Client:              mgr.GetClient(),
+		NonCachedAPIReader:  mgr.GetAPIReader(),
+		Log:                 ctrl.Log.WithName("controllers").WithName("Mattermost"),
+		Scheme:              mgr.GetScheme(),
+		MaxReconciling:      config.MaxReconcilingInstallations,
+		RequeueOnLimitDelay: config.RequeueOnLimitDelay,
+	}).SetupWithManager(mgr); err != nil {
+		logger.Error(err, "Unable to create controller", "controller", "Mattermost")
+		os.Exit(1)
+	}
+
 	// +kubebuilder:scaffold:builder
 
 	logger.Info("Starting manager")
