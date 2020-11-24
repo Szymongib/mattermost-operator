@@ -183,6 +183,7 @@ type Filestore struct {
 	OperatorManaged *OperatorManagedMinio `json:"operatorManaged,omitempty"`
 }
 
+// TODO: remove 'External' prefix from the fields
 type ExternalFilestore struct {
 	// Set to use an external MinIO deployment or S3. Must also set 'Secret' and 'ExternalBucket'.
 	// +optional
