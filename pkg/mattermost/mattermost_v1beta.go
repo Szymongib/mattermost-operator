@@ -3,7 +3,6 @@ package mattermost
 import (
 	"fmt"
 	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
-	"github.com/mattermost/mattermost-operator/pkg/components/minio"
 	"strconv"
 	"strings"
 
@@ -29,7 +28,7 @@ import (
 type DatabaseInfo interface {
 	//Check(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error
 	EnvVars(mattermost *mattermostv1beta1.Mattermost) []corev1.EnvVar
-	InitContainers() []corev1.Container
+	InitContainers(mattermost *mattermostv1beta1.Mattermost) []corev1.Container
 }
 
 // GenerateService returns the service for the Mattermost app.
@@ -129,74 +128,16 @@ func GenerateIngressV1Beta(mattermost *mattermostv1beta1.Mattermost, name, ingre
 // GenerateDeployment returns the deployment for Mattermost app.
 func GenerateDeploymentV1Beta(mattermost *mattermostv1beta1.Mattermost, db DatabaseInfo, deploymentName, ingressName, serviceAccountName, containerImage string, minioURL string) *appsv1.Deployment {
 	envVarDB := db.EnvVars(mattermost)
-	initContainers := db.InitContainers()
-
-
-	//} else {
-	//	mysqlName := utils.HashWithPrefix("db", mattermost.Name)
-	//
-	//	masterDBEnvVar.Value = fmt.Sprintf(
-	//		"mysql://$(MYSQL_USERNAME):$(MYSQL_PASSWORD)@tcp(%s-mysql-master.%s:3306)/%s?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s",
-	//		mysqlName, mattermost.Namespace, dbInfo.DatabaseName,
-	//	)
-	//
-	//	mysqlOperatorEnv := []corev1.EnvVar{
-	//		{
-	//			Name: "MYSQL_USERNAME",
-	//			ValueFrom: &corev1.EnvVarSource{
-	//				SecretKeyRef: &corev1.SecretKeySelector{
-	//					LocalObjectReference: corev1.LocalObjectReference{
-	//						Name: dbInfo.SecretName,
-	//					},
-	//					Key: "USER",
-	//				},
-	//			},
-	//		},
-	//		{
-	//			Name: "MYSQL_PASSWORD",
-	//			ValueFrom: &corev1.EnvVarSource{
-	//				SecretKeyRef: &corev1.SecretKeySelector{
-	//					LocalObjectReference: corev1.LocalObjectReference{
-	//						Name: dbInfo.SecretName,
-	//					},
-	//					Key: "PASSWORD",
-	//				},
-	//			},
-	//		},
-	//		{
-	//			Name: "MM_SQLSETTINGS_DATASOURCEREPLICAS",
-	//			Value: fmt.Sprintf(
-	//				"$(MYSQL_USERNAME):$(MYSQL_PASSWORD)@tcp(%s-mysql.%s:3306)/%s?readTimeout=30s&writeTimeout=30s",
-	//				mysqlName, mattermost.Namespace, dbInfo.DatabaseName,
-	//			),
-	//		},
-	//	}
-	//	envVarDB = append(envVarDB, mysqlOperatorEnv...)
-	//
-	//	// Create the init container to check that the DB is up and running
-	//	initContainers = append(initContainers, corev1.Container{
-	//		Name:            "init-check-operator-mysql",
-	//		Image:           "appropriate/curl:latest",
-	//		ImagePullPolicy: corev1.PullIfNotPresent,
-	//		Command: []string{
-	//			"sh", "-c",
-	//			fmt.Sprintf("until curl --max-time 5 http://%s-mysql-master.%s:3306; do echo waiting for mysql; sleep 5; done;",
-	//				mysqlName, mattermost.Namespace,
-	//			),
-	//		},
-	//	})
-	//}
-	//
-	//envVarDB = append(envVarDB, masterDBEnvVar)
+	initContainers := db.InitContainers(mattermost)
 
 	// TODO: refactor this probably same as db
-	filestoreSecret := minio.DefaultMinioSecretName(mattermost.Name)
+	filestoreSecret := fmt.Sprintf("%s-minio", mattermost.Name)
 	filestoreBucket := mattermost.Name
 
 	// Check if is external
 	if mattermost.Spec.Filestore.IsExternal() {
 		filestoreSecret = mattermost.Spec.Filestore.External.Secret
-		filestoreBucket = mattermost.Spec.Filestore.External.ExternalBucket
+		filestoreBucket = mattermost.Spec.Filestore.External.Bucket
 
 	}
 
@@ -219,7 +160,7 @@ func GenerateDeploymentV1Beta(mattermost *mattermostv1beta1.Mattermost, db Datab
 	}
 
 	if !mattermost.Spec.Filestore.IsExternal() {
-		// Create the init container to create the MinIO bucker
+		// Create the init container to create the MinIO bucket
 		initContainers = append(initContainers, corev1.Container{
 			Name:            "create-minio-bucket",
 			Image:           "minio/mc:latest",

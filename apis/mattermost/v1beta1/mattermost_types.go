@@ -49,7 +49,7 @@ type MattermostSpec struct {
 	MattermostEnv []v1.EnvVar `json:"mattermostEnv,omitempty"`
 	// LicenseSecret is the name of the secret containing a Mattermost license.
 	// +optional
-	LicenseSecret string `json:"mattermostLicenseSecret,omitempty"`
+	LicenseSecret string `json:"licenseSecret,omitempty"`
 	// IngressName defines the name to be used when creating the ingress rules
 	IngressName string `json:"ingressName"`
 	// +optional
@@ -104,7 +104,11 @@ type Advanced struct {
 
 // Database defines the database configuration for Mattermost.
 type Database struct {
+	// Defines the configuration of and external database.
+	// +optional
 	External        *ExternalDatabase        `json:"external,omitempty"`
+	// Defines the configuration of database managed by Kubernetes operator.
+	// +optional
 	OperatorManaged *OperatorManagedDatabase `json:"operatorManaged,omitempty"`
 
 	// TODO: clean this up
@@ -129,6 +133,7 @@ type Database struct {
 	//Secret string `json:"secret,omitempty"`
 }
 
+// ExternalDatabase defines the configuration of the external database that should be used by Mattermost.
 type ExternalDatabase struct {
 	// TODO: make it better
 	// TODO: optional fields?
@@ -138,11 +143,9 @@ type ExternalDatabase struct {
 	Secret string `json:"secret,omitempty"`
 }
 
+// OperatorManagedDatabase defines the configuration of a database managed by Kubernetes Operator.
 type OperatorManagedDatabase struct {
-	// TODO: do I need secret here?
-
-	// Defines the type of database to use for an Operator-Managed database. This
-	// value is ignored when using a User-Managed database.
+	// Defines the type of database to use for an Operator-Managed database.
 	Type string `json:"type,omitempty"`
 	// Defines the storage size for the database. ie 50Gi
 	// +optional
@@ -177,27 +180,29 @@ type OperatorManagedDatabase struct {
 	BackupRestoreSecretName string `json:"backupRestoreSecretName,omitempty"`
 }
 
-// Filestore defines the filestore configuration for Mattermost.
+// TODO: rename to FileStore?
+// Filestore defines the file store configuration for Mattermost.
 type Filestore struct {
+	// Defines the configuration of an external file store.
+	// +optional
 	External        *ExternalFilestore    `json:"external,omitempty"`
+	// Defines the configuration of file store managed by Kubernetes operator.
+	// +optional
 	OperatorManaged *OperatorManagedMinio `json:"operatorManaged,omitempty"`
 }
 
-// TODO: remove 'External' prefix from the fields
+// ExternalFilestore defines the configuration of the external file store that should be used by Mattermost.
 type ExternalFilestore struct {
-	// Set to use an external MinIO deployment or S3. Must also set 'Secret' and 'ExternalBucket'.
-	// +optional
-	ExternalURL string `json:"externalURL,omitempty"`
+	// Set to use an external MinIO deployment or S3.
+	URL string `json:"URL,omitempty"`
 	// Set to the bucket name of your external MinIO or S3.
-	// +optional
-	ExternalBucket string `json:"externalBucket,omitempty"`
+	Bucket string `json:"bucket,omitempty"`
 	// Optionally enter the name of already existing secret.
 	// Secret should have two values: "accesskey" and "secretkey".
-	// Required when "ExternalURL" is set.
-	// +optional
 	Secret string `json:"secret,omitempty"`
 }
 
+// OperatorManagedMinio defines the configuration of a Minio file store managed by Kubernetes Operator.
 type OperatorManagedMinio struct {
 	// Defines the storage size for Minio. ie 50Gi
 	// +optional

@@ -117,7 +117,7 @@ func schema_mattermost_operator_apis_mattermost_v1beta1_MattermostSpec(ref commo
 							},
 						},
 					},
-					"mattermostLicenseSecret": {
+					"licenseSecret": {
 						SchemaProps: spec.SchemaProps{
 							Description: "LicenseSecret is the name of the secret containing a Mattermost license.",
 							Type:        []string{"string"},

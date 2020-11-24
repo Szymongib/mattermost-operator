@@ -48,6 +48,11 @@ func (r *MattermostReconciler) checkMattermost(mattermost *mattermostv1beta1.Mat
 		}
 	}
 
+	err = r.checkMattermostDeployment(mattermost, mattermost.Name, mattermost.Spec.IngressName, mattermost.Name, mattermost.GetImageName(), reqLogger)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -159,7 +164,7 @@ func (r *MattermostReconciler) checkMattermostDeployment(mattermost *mattermostv
 
 	var minioURL string
 	if mattermost.Spec.Filestore.IsExternal() {
-		minioURL = mattermost.Spec.Filestore.External.ExternalURL
+		minioURL = mattermost.Spec.Filestore.External.URL
 	} else {
 		minioURL, err = r.getMinioService(mattermost, reqLogger)
 		if err != nil {

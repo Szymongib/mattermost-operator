@@ -3,21 +3,21 @@ package mattermost
 import (
 	"context"
 	"fmt"
+	"github.com/go-logr/logr"
+	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 	mattermostmysql "github.com/mattermost/mattermost-operator/pkg/components/mysql"
 	"github.com/mattermost/mattermost-operator/pkg/components/utils"
-	"github.com/mattermost/mattermost-operator/pkg/database"
+	mattermostApp "github.com/mattermost/mattermost-operator/pkg/mattermost"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	"github.com/go-logr/logr"
-	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 )
 
 // TODO: MM resource builder?
 
 
-func (r *MattermostReconciler) checkDatabaseSecret(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (database.MMDatabase, error) {
+func (r *MattermostReconciler) checkDatabaseSecret(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (mattermostApp.DatabaseInfo, error) {
 	if mattermost.Spec.Database.IsExternal() {
 		return r.readExternalDBSecret(mattermost)
 	}
@@ -36,7 +36,7 @@ func (r *MattermostReconciler) checkDatabaseSecret(mattermost *mattermostv1beta1
 	return nil, fmt.Errorf("unsupported database")
 }
 
-func  (r *MattermostReconciler) readExternalDBSecret(mattermost *mattermostv1beta1.Mattermost) (database.MMDatabase, error) {
+func  (r *MattermostReconciler) readExternalDBSecret(mattermost *mattermostv1beta1.Mattermost) (mattermostApp.DatabaseInfo, error) {
 	secretName := types.NamespacedName{Name: mattermost.Spec.Database.External.Secret, Namespace: mattermost.Namespace}
 
 	var secret corev1.Secret
@@ -45,11 +45,11 @@ func  (r *MattermostReconciler) readExternalDBSecret(mattermost *mattermostv1bet
 		return nil, errors.Wrap(err, "failed to get external db Secret")
 	}
 
-	return database.NewExternalDB(mattermost, secret)
+	return mattermostApp.NewExternalDB(mattermost, secret)
 }
 
 
-func (r *MattermostReconciler) getOrCreateMySQLSecrets(mattermost  *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (database.MMDatabase, error) {
+func (r *MattermostReconciler) getOrCreateMySQLSecrets(mattermost  *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (mattermostApp.DatabaseInfo, error) {
 	var err error
 	dbSecret := &corev1.Secret{}
 	dbSecretName := mattermostmysql.DefaultDatabaseSecretName(mattermost.Name)
@@ -64,10 +64,10 @@ func (r *MattermostReconciler) getOrCreateMySQLSecrets(mattermost  *mattermostv1
 		return nil, err
 	}
 
-	return database.NewMySQLDB(*dbSecret)
+	return mattermostApp.NewMySQLDB(*dbSecret)
 }
 
-func (r *MattermostReconciler) createMySQLSecret(mattermost *mattermostv1beta1.Mattermost, secretName string, reqLogger logr.Logger) (database.MMDatabase, error) {
+func (r *MattermostReconciler) createMySQLSecret(mattermost *mattermostv1beta1.Mattermost, secretName string, reqLogger logr.Logger) (mattermostApp.DatabaseInfo, error) {
 	reqLogger.Info("Creating new mysql secret")
 
 	dbSecret := &corev1.Secret{}
@@ -91,5 +91,5 @@ func (r *MattermostReconciler) createMySQLSecret(mattermost *mattermostv1beta1.M
 		return nil, errors.Wrap(err, "failed to create mysql secret")
 	}
 
-	return database.NewMySQLDB(*dbSecret)
+	return mattermostApp.NewMySQLDB(*dbSecret)
 }

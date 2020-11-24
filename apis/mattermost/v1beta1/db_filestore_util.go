@@ -19,7 +19,7 @@ func (fs *Filestore) SetDefaults() {
 
 // IsExternal returns true if the MinIO/S3 instance is external.
 func (fs *Filestore) IsExternal() bool {
-	return fs.External != nil && fs.External.ExternalURL != ""
+	return fs.External != nil && fs.External.URL != ""
 }
 
 func (fs *Filestore) ensureDefault() {

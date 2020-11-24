@@ -947,6 +947,7 @@ spec:
                 description: External Services
                 properties:
                   external:
+                    description: Defines the configuration of and external database.
                     properties:
                       secret:
                         description: 'TODO: make it better TODO: optional fields?
@@ -956,6 +957,8 @@ spec:
                         type: string
                     type: object
                   operatorManaged:
+                    description: Defines the configuration of database managed by
+                      Kubernetes operator.
                     properties:
                       backupRemoteDeletePolicy:
                         description: Defines the backup retention policy.
@@ -1022,7 +1025,6 @@ spec:
                         type: string
                       type:
                         description: Defines the type of database to use for an Operator-Managed
-                          database. This value is ignored when using a User-Managed
                           database.
                         type: string
                     type: object
@@ -1039,25 +1041,27 @@ spec:
                     type: string
                 type: object
               filestore:
-                description: Filestore defines the filestore configuration for Mattermost.
+                description: 'TODO: rename to FileStore? Filestore defines the file
+                  store configuration for Mattermost.'
                 properties:
                   external:
+                    description: Defines the configuration of an external file store.
                     properties:
-                      externalBucket:
+                      URL:
+                        description: Set to use an external MinIO deployment or S3.
+                        type: string
+                      bucket:
                         description: Set to the bucket name of your external MinIO
                           or S3.
                         type: string
-                      externalURL:
-                        description: Set to use an external MinIO deployment or S3.
-                          Must also set 'Secret' and 'ExternalBucket'.
-                        type: string
                       secret:
                         description: 'Optionally enter the name of already existing
-                          secret. Secret should have two values: "accesskey" and "secretkey".
-                          Required when "ExternalURL" is set.'
+                          secret. Secret should have two values: "accesskey" and "secretkey".'
                         type: string
                     type: object
                   operatorManaged:
+                    description: Defines the configuration of file store managed by
+                      Kubernetes operator.
                     properties:
                       replicas:
                         description: 'Defines the number of Minio replicas. Supply
@@ -1112,6 +1116,10 @@ spec:
               ingressName:
                 description: IngressName defines the name to be used when creating
                   the ingress rules
+                type: string
+              licenseSecret:
+                description: LicenseSecret is the name of the secret containing a
+                  Mattermost license.
                 type: string
               mattermostEnv:
                 description: Optional environment variables to set in the Mattermost
@@ -1217,10 +1225,6 @@ spec:
                   - name
                   type: object
                 type: array
-              mattermostLicenseSecret:
-                description: LicenseSecret is the name of the secret containing a
-                  Mattermost license.
-                type: string
               replicas:
                 description: Replicas defines the number of replicas to use for the
                   Mattermost app servers.
