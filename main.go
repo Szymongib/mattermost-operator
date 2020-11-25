@@ -21,8 +21,6 @@ import (
 
 	mattermostcomv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
 	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
-	"github.com/mattermost/mattermost-operator/controllers/mattermost/clusterinstallation"
-	"github.com/mattermost/mattermost-operator/controllers/mattermost/mattermostrestoredb"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -95,25 +93,25 @@ func main() {
 
 	logger.Info("Registering Components")
 
-	if err = (&clusterinstallation.ClusterInstallationReconciler{
-		Client:              mgr.GetClient(),
-		NonCachedAPIReader:  mgr.GetAPIReader(),
-		Log:                 ctrl.Log.WithName("controllers").WithName("ClusterInstallation"),
-		Scheme:              mgr.GetScheme(),
-		MaxReconciling:      config.MaxReconcilingInstallations,
-		RequeueOnLimitDelay: config.RequeueOnLimitDelay,
-	}).SetupWithManager(mgr); err != nil {
-		logger.Error(err, "Unable to create controller", "controller", "ClusterInstallation")
-		os.Exit(1)
-	}
-	if err = (&mattermostrestoredb.MattermostRestoreDBReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("MattermostRestoreDB"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		logger.Error(err, "Unable to create controller", "controller", "MattermostRestoreDB")
-		os.Exit(1)
-	}
+	//if err = (&clusterinstallation.ClusterInstallationReconciler{
+	//	Client:              mgr.GetClient(),
+	//	NonCachedAPIReader:  mgr.GetAPIReader(),
+	//	Log:                 ctrl.Log.WithName("controllers").WithName("ClusterInstallation"),
+	//	Scheme:              mgr.GetScheme(),
+	//	MaxReconciling:      config.MaxReconcilingInstallations,
+	//	RequeueOnLimitDelay: config.RequeueOnLimitDelay,
+	//}).SetupWithManager(mgr); err != nil {
+	//	logger.Error(err, "Unable to create controller", "controller", "ClusterInstallation")
+	//	os.Exit(1)
+	//}
+	//if err = (&mattermostrestoredb.MattermostRestoreDBReconciler{
+	//	Client: mgr.GetClient(),
+	//	Log:    ctrl.Log.WithName("controllers").WithName("MattermostRestoreDB"),
+	//	Scheme: mgr.GetScheme(),
+	//}).SetupWithManager(mgr); err != nil {
+	//	logger.Error(err, "Unable to create controller", "controller", "MattermostRestoreDB")
+	//	os.Exit(1)
+	//}
 	if err = (&mattermost.MattermostReconciler{
 		Client:              mgr.GetClient(),
 		NonCachedAPIReader:  mgr.GetAPIReader(),

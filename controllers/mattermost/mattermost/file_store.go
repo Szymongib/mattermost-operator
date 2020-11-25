@@ -47,5 +47,5 @@ func (r *MattermostReconciler) checkOperatorManagedMinio(mattermost *mattermostv
 		return nil, errors.Wrap(err, "failed to get Minio URL")
 	}
 
-	return mattermostApp.NewOperatorManagedFileStoreInfo(mattermost, *secret, url)
+	return mattermostApp.NewOperatorManagedFileStoreInfo(mattermost, secret.Name, url)
 }

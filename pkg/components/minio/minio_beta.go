@@ -13,7 +13,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // Instance returns the Minio component to deploy
@@ -25,13 +24,7 @@ func InstanceV1Beta(mattermost *mattermostv1beta1.Mattermost) *minioOperator.Min
 			Name:      minioName,
 			Namespace: mattermost.Namespace,
 			Labels:    mattermostv1alpha1.ClusterInstallationResourceLabels(mattermost.Name),
-			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(mattermost, schema.GroupVersionKind{
-					Group:   mattermostv1alpha1.GroupVersion.Group,
-					Version: mattermostv1alpha1.GroupVersion.Version,
-					Kind:    "ClusterInstallation",
-				}),
-			},
+			OwnerReferences: mattermostApp.MattermostOwnerReference(mattermost),
 		},
 		Spec: minioOperator.MinIOInstanceSpec{
 			Replicas:    *mattermost.Spec.Filestore.OperatorManaged.Replicas,

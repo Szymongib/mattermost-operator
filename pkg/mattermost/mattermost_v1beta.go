@@ -446,9 +446,9 @@ func GenerateRoleBindingV1Beta(mattermost *mattermostv1beta1.Mattermost, roleNam
 func MattermostOwnerReference(mattermost *mattermostv1beta1.Mattermost) []metav1.OwnerReference {
 	return []metav1.OwnerReference{
 		*metav1.NewControllerRef(mattermost, schema.GroupVersionKind{
-			Group:   mattermostv1alpha1.GroupVersion.Group,
-			Version: mattermostv1alpha1.GroupVersion.Version,
-			Kind:    mattermost.Kind,
+			Group:   mattermostv1beta1.GroupVersion.Group,
+			Version: mattermostv1beta1.GroupVersion.Version,
+			Kind:    "Mattermost",
 		}),
 	}
 }
