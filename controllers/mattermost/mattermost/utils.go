@@ -85,9 +85,9 @@ func (r *MattermostReconciler) handleCheckMattermostHealth(mattermost *mattermos
 		status.UpdatedReplicas++
 	}
 
-	var replicas int32
-	if mattermost.Spec.Replicas == nil {
-		replicas = 1
+	var replicas int32 = 1
+	if mattermost.Spec.Replicas != nil {
+		replicas = *mattermost.Spec.Replicas
 	}
 
 	if int32(len(pods.Items)) != replicas {
