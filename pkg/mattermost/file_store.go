@@ -96,14 +96,14 @@ func NewExternalFileStoreInfo(mattermost *mattermostv1beta1.Mattermost, secret c
 	}, nil
 }
 
-func NewOperatorManagedFileStoreInfo(mattermost *mattermostv1beta1.Mattermost, secret corev1.Secret, minioURL string) (*FileStoreInfo, error) {
+func NewOperatorManagedFileStoreInfo(mattermost *mattermostv1beta1.Mattermost, secret, minioURL string) (*FileStoreInfo, error) {
 
 	// TODO: check secret?
 
 	return &FileStoreInfo{
-		secretName: secret.Name,
+		secretName: secret,
 		bucketName: mattermost.Name,
 		url: minioURL,
-		config: &OperatorManagedMinio{minioURL: minioURL, secretName: secret.Name},
+		config: &OperatorManagedMinio{minioURL: minioURL, secretName: secret},
 	}, nil
 }

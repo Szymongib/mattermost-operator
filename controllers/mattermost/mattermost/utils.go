@@ -94,7 +94,7 @@ func (r *MattermostReconciler) handleCheckMattermostHealth(mattermost *mattermos
 		return status, fmt.Errorf("found %d pods, but wanted %d", len(pods.Items), replicas)
 	}
 
-	status.Image = mattermost.GetImageName()
+	status.Image = mattermost.Spec.Image
 	status.Version = mattermost.Spec.Version
 
 	status.Endpoint = "not available"
