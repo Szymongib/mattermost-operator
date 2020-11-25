@@ -2,7 +2,6 @@ package mattermost
 
 import (
 	"fmt"
-	"github.com/go-logr/logr"
 	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 	"github.com/mattermost/mattermost-operator/pkg/components/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -110,9 +109,5 @@ func (m *MySQLDB) InitContainers(mattermost *mattermostv1beta1.Mattermost) []cor
 			},
 		},
 	}
-}
-
-func (m *MySQLDB) Check(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error {
-	panic("implement me")
 }
 

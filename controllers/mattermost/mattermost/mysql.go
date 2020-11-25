@@ -16,7 +16,9 @@ import (
 	mattermostmysql "github.com/mattermost/mattermost-operator/pkg/components/mysql"
 )
 
-func (r *MattermostReconciler) checkOperatorManagedMySQL(mattermost  *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (mattermostApp.DatabaseInfo, error) {
+func (r *MattermostReconciler) checkOperatorManagedMySQL(mattermost  *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (mattermostApp.DatabaseConfig, error) {
+	reqLogger = reqLogger.WithValues("Reconcile", "mysql")
+
 	err := r.checkMySQLCluster(mattermost, reqLogger)
 	if err != nil {
 		return nil, errors.Wrap(err, "error while checking MySQL cluster")
@@ -26,7 +28,6 @@ func (r *MattermostReconciler) checkOperatorManagedMySQL(mattermost  *mattermost
 }
 
 func (r *MattermostReconciler) checkMySQLCluster(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error {
-	reqLogger = reqLogger.WithValues("Reconcile", "mysql")
 	desired := mattermostmysql.ClusterV1Beta(mattermost)
 
 	err := r.createMySQLClusterIfNotExists(mattermost, desired, reqLogger)
@@ -56,7 +57,7 @@ func (r *MattermostReconciler) createMySQLClusterIfNotExists(mattermost *matterm
 	return nil
 }
 
-func (r *MattermostReconciler) getOrCreateMySQLSecrets(mattermost  *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (mattermostApp.DatabaseInfo, error) {
+func (r *MattermostReconciler) getOrCreateMySQLSecrets(mattermost  *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (mattermostApp.DatabaseConfig, error) {
 	var err error
 	dbSecret := &corev1.Secret{}
 	dbSecretName := mattermostmysql.DefaultDatabaseSecretName(mattermost.Name)
@@ -74,7 +75,7 @@ func (r *MattermostReconciler) getOrCreateMySQLSecrets(mattermost  *mattermostv1
 	return mattermostApp.NewMySQLDB(*dbSecret)
 }
 
-func (r *MattermostReconciler) createMySQLSecret(mattermost *mattermostv1beta1.Mattermost, secretName string, reqLogger logr.Logger) (mattermostApp.DatabaseInfo, error) {
+func (r *MattermostReconciler) createMySQLSecret(mattermost *mattermostv1beta1.Mattermost, secretName string, reqLogger logr.Logger) (mattermostApp.DatabaseConfig, error) {
 	reqLogger.Info("Creating new mysql secret")
 
 	dbSecret := &corev1.Secret{}
