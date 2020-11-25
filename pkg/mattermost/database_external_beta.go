@@ -80,9 +80,12 @@ func (e *ExternalDBInfo) EnvVars(_ *mattermostv1beta1.Mattermost) []corev1.EnvVa
 func (e *ExternalDBInfo) InitContainers(_ *mattermostv1beta1.Mattermost) []corev1.Container {
 	var initContainers []corev1.Container
 	// TODO: move this func here
-	container := GetDBCheckInitContainerV1Beta(e.secretName, e.dbType)
-	if container != nil {
-		initContainers = append(initContainers, *container)
+	if e.hasDBCheckURL {
+		container := GetDBCheckInitContainerV1Beta(e.secretName, e.dbType)
+		if container != nil {
+			initContainers = append(initContainers, *container)
+		}
 	}
+
 	return initContainers
 }

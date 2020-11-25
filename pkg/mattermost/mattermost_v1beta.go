@@ -465,7 +465,7 @@ func newServiceV1Beta(mattermost *mattermostv1beta1.Mattermost, serviceName, sel
 				Annotations: annotations,
 		},
 		Spec: corev1.ServiceSpec{
-		Selector: mattermostv1alpha1.ClusterInstallationSelectorLabels(selectorName),
+		Selector: mattermostv1beta1.MattermostSelectorLabels(selectorName),
 	},
 	}
 }

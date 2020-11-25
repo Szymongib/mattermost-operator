@@ -194,7 +194,7 @@ type Filestore struct {
 // ExternalFilestore defines the configuration of the external file store that should be used by Mattermost.
 type ExternalFilestore struct {
 	// Set to use an external MinIO deployment or S3.
-	URL string `json:"URL,omitempty"`
+	URL string `json:"url,omitempty"`
 	// Set to the bucket name of your external MinIO or S3.
 	Bucket string `json:"bucket,omitempty"`
 	// Optionally enter the name of already existing secret.

@@ -1047,9 +1047,6 @@ spec:
                   external:
                     description: Defines the configuration of an external file store.
                     properties:
-                      URL:
-                        description: Set to use an external MinIO deployment or S3.
-                        type: string
                       bucket:
                         description: Set to the bucket name of your external MinIO
                           or S3.
@@ -1057,6 +1054,9 @@ spec:
                       secret:
                         description: 'Optionally enter the name of already existing
                           secret. Secret should have two values: "accesskey" and "secretkey".'
+                        type: string
+                      url:
+                        description: Set to use an external MinIO deployment or S3.
                         type: string
                     type: object
                   operatorManaged:
