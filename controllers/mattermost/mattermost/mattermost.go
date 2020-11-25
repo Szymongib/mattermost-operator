@@ -20,7 +20,11 @@ import (
 
 const updateJobName = "mattermost-update-check"
 
-func (r *MattermostReconciler) checkMattermost(mattermost *mattermostv1beta1.Mattermost, dbInfo mattermostApp.DatabaseInfo, reqLogger logr.Logger) error {
+func (r *MattermostReconciler) checkMattermost(
+	mattermost *mattermostv1beta1.Mattermost,
+	dbInfo mattermostApp.DatabaseConfig,
+	fileStoreInfo *mattermostApp.FileStoreInfo,
+	reqLogger logr.Logger) error {
 	reqLogger = reqLogger.WithValues("Reconcile", "mattermost")
 
 	err := r.checkMattermostService(mattermost, mattermost.Name, mattermost.GetProductionDeploymentName(), reqLogger)
@@ -48,14 +52,13 @@ func (r *MattermostReconciler) checkMattermost(mattermost *mattermostv1beta1.Mat
 		}
 	}
 
-	err = r.checkMattermostDeployment(mattermost, dbInfo, reqLogger)
+	err = r.checkMattermostDeployment(mattermost, dbInfo, fileStoreInfo, reqLogger)
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
-
 
 func (r *MattermostReconciler) checkMattermostService(mattermost *mattermostv1beta1.Mattermost, resourceName, selectorName string, reqLogger logr.Logger) error {
 	desired := mattermostApp.GenerateServiceV1Beta(mattermost, resourceName, selectorName)
@@ -156,7 +159,11 @@ func (r *MattermostReconciler) checkMattermostIngress(mattermost *mattermostv1be
 	return r.update(current, desired, reqLogger)
 }
 
-func (r *MattermostReconciler) checkMattermostDeployment(mattermost *mattermostv1beta1.Mattermost, dbInfo mattermostApp.DatabaseInfo, reqLogger logr.Logger) error {
+func (r *MattermostReconciler) checkMattermostDeployment(
+	mattermost *mattermostv1beta1.Mattermost,
+	dbInfo mattermostApp.DatabaseConfig,
+	fileStoreInfo *mattermostApp.FileStoreInfo, reqLogger logr.Logger) error {
+
 	var err error
 	var minioURL string
 	if mattermost.Spec.Filestore.IsExternal() {
@@ -178,6 +185,7 @@ func (r *MattermostReconciler) checkMattermostDeployment(mattermost *mattermostv
 	desired := mattermostApp.GenerateDeploymentV1Beta(
 		mattermost,
 		dbInfo,
+		fileStoreInfo,
 		mattermost.Name,
 		mattermost.Spec.IngressName,
 		mattermost.Name,

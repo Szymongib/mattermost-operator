@@ -25,9 +25,20 @@ import (
 //	WaitForDBSetupContainerName = "init-wait-for-db-setup"
 //)
 
-type DatabaseInfo interface {
-	//Check(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error
+//type MMConfigurator interface {
+//
+//}
+
+type DatabaseConfig interface {
 	EnvVars(mattermost *mattermostv1beta1.Mattermost) []corev1.EnvVar
+	InitContainers(mattermost *mattermostv1beta1.Mattermost) []corev1.Container
+}
+
+// TODO: consider specifying this methods on MM?
+type FileStoreConfig interface {
+	//Secret(mattermost *mattermostv1beta1.Mattermost) string
+	//Bucket(mattermost *mattermostv1beta1.Mattermost) string
+	//URL() string
 	InitContainers(mattermost *mattermostv1beta1.Mattermost) []corev1.Container
 }
 
@@ -126,20 +137,22 @@ func GenerateIngressV1Beta(mattermost *mattermostv1beta1.Mattermost, name, ingre
 }
 
 // GenerateDeployment returns the deployment for Mattermost app.
-func GenerateDeploymentV1Beta(mattermost *mattermostv1beta1.Mattermost, db DatabaseInfo, deploymentName, ingressName, serviceAccountName, containerImage string, minioURL string) *appsv1.Deployment {
+func GenerateDeploymentV1Beta(mattermost *mattermostv1beta1.Mattermost, db DatabaseConfig, fileStore *FileStoreInfo, deploymentName, ingressName, serviceAccountName, containerImage string, minioURL string) *appsv1.Deployment {
 	envVarDB := db.EnvVars(mattermost)
 	initContainers := db.InitContainers(mattermost)
 
+	initContainers = append(initContainers, fileStore.config.InitContainers(mattermost)...)
+
 	// TODO: refactor this probably same as db
-	filestoreSecret := fmt.Sprintf("%s-minio", mattermost.Name)
-	filestoreBucket := mattermost.Name
+	filestoreSecret := fileStore.secretName
+	filestoreBucket := fileStore.bucketName
 
-	// Check if is external
-	if mattermost.Spec.Filestore.IsExternal() {
-		filestoreSecret = mattermost.Spec.Filestore.External.Secret
-		filestoreBucket = mattermost.Spec.Filestore.External.Bucket
-
-	}
+	//// Check if is external
+	//if mattermost.Spec.Filestore.IsExternal() {
+	//	filestoreSecret = mattermost.Spec.Filestore.External.Secret
+	//	filestoreBucket = mattermost.Spec.Filestore.External.Bucket
+	//
+	//}
 
 	minioAccessEnv := &corev1.EnvVarSource{
 		SecretKeyRef: &corev1.SecretKeySelector{
@@ -159,42 +172,42 @@ func GenerateDeploymentV1Beta(mattermost *mattermostv1beta1.Mattermost, db Datab
 		},
 	}
 
-	if !mattermost.Spec.Filestore.IsExternal() {
-		// Create the init container to create the MinIO bucket
-		initContainers = append(initContainers, corev1.Container{
-			Name:            "create-minio-bucket",
-			Image:           "minio/mc:latest",
-			ImagePullPolicy: corev1.PullIfNotPresent,
-			Command: []string{
-				"/bin/sh", "-c",
-				fmt.Sprintf("mc config host add localminio http://%s $(MINIO_ACCESS_KEY) $(MINIO_SECRET_KEY) && mc mb localminio/%s -q -p", minioURL, mattermost.Name),
-			},
-			Env: []corev1.EnvVar{
-				{
-					Name:      "MINIO_ACCESS_KEY",
-					ValueFrom: minioAccessEnv,
-				},
-				{
-					Name:      "MINIO_SECRET_KEY",
-					ValueFrom: minioSecretEnv,
-				},
-			},
-		})
+	//if !mattermost.Spec.Filestore.IsExternal() {
+	//	// Create the init container to create the MinIO bucket
+	//	initContainers = append(initContainers, corev1.Container{
+	//		Name:            "create-minio-bucket",
+	//		Image:           "minio/mc:latest",
+	//		ImagePullPolicy: corev1.PullIfNotPresent,
+	//		Command: []string{
+	//			"/bin/sh", "-c",
+	//			fmt.Sprintf("mc config host add localminio http://%s $(MINIO_ACCESS_KEY) $(MINIO_SECRET_KEY) && mc mb localminio/%s -q -p", minioURL, mattermost.Name),
+	//		},
+	//		Env: []corev1.EnvVar{
+	//			{
+	//				Name:      "MINIO_ACCESS_KEY",
+	//				ValueFrom: minioAccessEnv,
+	//			},
+	//			{
+	//				Name:      "MINIO_SECRET_KEY",
+	//				ValueFrom: minioSecretEnv,
+	//			},
+	//		},
+	//	})
+	//
+	//	// Create the init container to check that MinIO is up and running
+	//	initContainers = append(initContainers, corev1.Container{
+	//		Name:            "init-check-minio",
+	//		Image:           "appropriate/curl:latest",
+	//		ImagePullPolicy: corev1.PullIfNotPresent,
+	//		Command: []string{
+	//			"sh", "-c",
+	//			fmt.Sprintf("until curl --max-time 5 http://%s/minio/health/ready; do echo waiting for minio; sleep 5; done;", minioURL),
+	//		},
+	//	})
+	//}
 
-		// Create the init container to check that MinIO is up and running
-		initContainers = append(initContainers, corev1.Container{
-			Name:            "init-check-minio",
-			Image:           "appropriate/curl:latest",
-			ImagePullPolicy: corev1.PullIfNotPresent,
-			Command: []string{
-				"sh", "-c",
-				fmt.Sprintf("until curl --max-time 5 http://%s/minio/health/ready; do echo waiting for minio; sleep 5; done;", minioURL),
-			},
-		})
-	}
-
-	// Generate Minio config
-	envVarMinio := []corev1.EnvVar{
+	// Generate FileStore config
+	envVarFileStore := []corev1.EnvVar{
 		{
 			Name:  "MM_FILESETTINGS_DRIVERNAME",
 			Value: "amazons3",
@@ -350,7 +363,8 @@ func GenerateDeploymentV1Beta(mattermost *mattermostv1beta1.Mattermost, db Datab
 	// EnvVars Section
 	envVars := []corev1.EnvVar{}
 	envVars = append(envVars, envVarDB...)
-	envVars = append(envVars, envVarMinio...)
+	//envVars = append(envVars, fileStoreEnv...)
+	envVars = append(envVars, envVarFileStore...)
 	envVars = append(envVars, envVarES...)
 	envVars = append(envVars, envVarGeneral...)
 

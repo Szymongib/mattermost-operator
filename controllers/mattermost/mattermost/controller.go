@@ -117,13 +117,13 @@ func (r *MattermostReconciler) Reconcile(request ctrl.Request) (ctrl.Result, err
 		return reconcile.Result{}, err
 	}
 
-	err = r.checkMinio(mattermost, reqLogger)
+	fileStoreInfo, err := r.checkFileStore(mattermost, reqLogger)
 	if err != nil {
 		r.setStateReconcilingAndLogError(mattermost, reqLogger)
 		return reconcile.Result{}, err
 	}
 
-	err = r.checkMattermost(mattermost, dbInfo, reqLogger)
+	err = r.checkMattermost(mattermost, dbInfo, fileStoreInfo, reqLogger)
 	if err != nil {
 		r.setStateReconcilingAndLogError(mattermost, reqLogger)
 		return reconcile.Result{}, err

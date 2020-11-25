@@ -11,7 +11,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *MattermostReconciler) checkDatabase(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (mattermostApp.DatabaseInfo, error) {
+func (r *MattermostReconciler) checkDatabase(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (mattermostApp.DatabaseConfig, error) {
+	reqLogger = reqLogger.WithValues("Reconcile", "database")
+
 	if mattermost.Spec.Database.IsExternal() {
 		return r.readExternalDBSecret(mattermost)
 	}
@@ -19,7 +21,7 @@ func (r *MattermostReconciler) checkDatabase(mattermost *mattermostv1beta1.Matte
 	return r.checkOperatorManagedDB(mattermost, reqLogger)
 }
 
-func  (r *MattermostReconciler) readExternalDBSecret(mattermost *mattermostv1beta1.Mattermost) (mattermostApp.DatabaseInfo, error) {
+func  (r *MattermostReconciler) readExternalDBSecret(mattermost *mattermostv1beta1.Mattermost) (mattermostApp.DatabaseConfig, error) {
 	secretName := types.NamespacedName{Name: mattermost.Spec.Database.External.Secret, Namespace: mattermost.Namespace}
 
 	var secret corev1.Secret
@@ -28,10 +30,10 @@ func  (r *MattermostReconciler) readExternalDBSecret(mattermost *mattermostv1bet
 		return nil, errors.Wrap(err, "failed to get external db Secret")
 	}
 
-	return mattermostApp.NewExternalDB(mattermost, secret)
+	return mattermostApp.NewExternalDBInfo(mattermost, secret)
 }
 
-func (r *MattermostReconciler) checkOperatorManagedDB(mattermost  *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (mattermostApp.DatabaseInfo, error) {
+func (r *MattermostReconciler) checkOperatorManagedDB(mattermost  *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (mattermostApp.DatabaseConfig, error) {
 	if mattermost.Spec.Database.OperatorManaged == nil {
 		return nil, fmt.Errorf("configuration for Operator managed database not provided")
 	}

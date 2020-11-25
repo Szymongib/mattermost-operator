@@ -75,6 +75,7 @@ func Secret(mattermost *mattermostv1alpha1.ClusterInstallation) *corev1.Secret {
 	)
 }
 
+// TODO: move it to other minio file?
 // DefaultMinioSecretName returns the default minio secret name based on
 // the provided installation name.
 func DefaultMinioSecretName(installationName string) string {
