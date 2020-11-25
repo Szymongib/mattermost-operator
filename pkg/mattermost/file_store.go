@@ -20,7 +20,7 @@ type FileStoreInfo struct {
 
 type ExternalFileStore struct {}
 
-func (e *ExternalFileStore) InitContainers(mattermost *mattermostv1beta1.Mattermost) []corev1.Container {
+func (e *ExternalFileStore) InitContainers(_ *mattermostv1beta1.Mattermost) []corev1.Container {
 	return []corev1.Container{}
 }
 
