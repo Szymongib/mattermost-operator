@@ -16,13 +16,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-// handleCheckClusterInstallation checks the health and correctness of the k8s
+// handleCheckMattermostHealth checks the health and correctness of the k8s
 // objects that make up a Mattermost installation.
 //
 // NOTE: this is a vital health check. Every reconciliation loop should run this
 // check at the very end to ensure that everything in the installation is as it
 // should be. Over time, more types of checks should be added here as needed.
-func (r *MattermostReconciler) handleCheckClusterInstallation(mattermost *mattermostv1beta1.Mattermost) (mattermostv1beta1.MattermostStatus, error) {
+func (r *MattermostReconciler) handleCheckMattermostHealth(mattermost *mattermostv1beta1.Mattermost) (mattermostv1beta1.MattermostStatus, error) {
 	status := mattermostv1beta1.MattermostStatus{
 		State:           mattermostv1beta1.Reconciling,
 		Replicas:        0,
@@ -200,7 +200,7 @@ func (r *MattermostReconciler) checkSecret(secretName, keyName, namespace string
 	return fmt.Errorf("secret %s is missing data key: %s", secretName, keyName)
 }
 
-// setStateReconciling sets the ClusterInstallation state to reconciling.
+// setStateReconciling sets the Mattermost state to reconciling.
 func (r *MattermostReconciler) setStateReconciling(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error {
 	return r.setState(mattermost, mattermostv1beta1.Reconciling, reqLogger)
 }
@@ -215,7 +215,7 @@ func (r *MattermostReconciler) setStateReconcilingAndLogError(mattermost *matter
 	}
 }
 
-// setState sets the provided ClusterInstallation to the provided state if that
+// setState sets the provided Mattermost to the provided state if that
 // is different from the current state.
 func (r *MattermostReconciler) setState(mattermost *mattermostv1beta1.Mattermost, desired mattermostv1beta1.RunningState, reqLogger logr.Logger) error {
 	if mattermost.Status.State == desired {
@@ -249,22 +249,6 @@ func (r *MattermostReconciler) updateStatus(mattermost *mattermostv1beta1.Matter
 
 	return nil
 }
-
-//func ensureLabels(required, final map[string]string) map[string]string {
-//	if required == nil {
-//		return final
-//	}
-//
-//	if final == nil {
-//		final = make(map[string]string)
-//	}
-//
-//	for key, value := range required {
-//		final[key] = value
-//	}
-//
-//	return final
-//}
 
 func getRevision(annotations map[string]string) string {
 	if annotations == nil {

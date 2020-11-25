@@ -23,7 +23,7 @@ import (
 
 const healthCheckRequeueDelay = 6 * time.Second
 
-// MattermostReconciler reconciles a ClusterInstallation object
+// MattermostReconciler reconciles a Mattermost object
 type MattermostReconciler struct {
 	client.Client
 	NonCachedAPIReader  client.Reader
@@ -44,8 +44,8 @@ func (r *MattermostReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// Reconcile reads the state of the cluster for a ClusterInstallation object and
-// makes changes to obtain the exact state defined in `ClusterInstallation.Spec`.
+// Reconcile reads the state of the cluster for a Mattermost object and
+// makes changes to obtain the exact state defined in `Mattermost.Spec`.
 //
 // Note:
 // The Controller will requeue the Request to be processed again if the returned
@@ -75,7 +75,7 @@ func (r *MattermostReconciler) Reconcile(request ctrl.Request) (ctrl.Result, err
 			return reconcile.Result{}, errors.Wrap(err, "failed to list Mattermosts")
 		}
 
-		// Check if limit of Cluster Installations reconciling at the same time is reached.
+		// Check if limit of Mattermosts reconciling at the same time is reached.
 		if countReconciling(mmListInstallations.Items) >= r.MaxReconciling {
 			reqLogger.Info(fmt.Sprintf("Reached limit of reconciling installations, requeuing in %s", r.RequeueOnLimitDelay.String()))
 			return ctrl.Result{RequeueAfter: r.RequeueOnLimitDelay}, nil
@@ -129,7 +129,7 @@ func (r *MattermostReconciler) Reconcile(request ctrl.Request) (ctrl.Result, err
 		return reconcile.Result{}, err
 	}
 
-	status, err := r.handleCheckClusterInstallation(mattermost)
+	status, err := r.handleCheckMattermostHealth(mattermost)
 	if err != nil {
 		statusErr := r.updateStatus(mattermost, status, reqLogger)
 		if statusErr != nil {
@@ -162,9 +162,9 @@ func (r *MattermostReconciler) updateSpec(reqLogger logr.Logger, originalMatterm
 	return ctrl.Result{}, nil
 }
 
-func countReconciling(clusterInstallations []mattermostv1beta1.Mattermost) int {
+func countReconciling(mattermosts []mattermostv1beta1.Mattermost) int {
 	sum := 0
-	for _, ci := range clusterInstallations {
+	for _, ci := range mattermosts {
 		if ci.Status.State == mattermostv1beta1.Reconciling {
 			sum++
 		}

@@ -16,40 +16,6 @@ import (
 	minioOperator "github.com/minio/minio-operator/pkg/apis/miniocontroller/v1beta1"
 )
 
-
-// TODO: rename to checkFilestore and move from here
-//func (r *MattermostReconciler) checkMinio(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error {
-//	reqLogger = reqLogger.WithValues("Reconcile", "minio")
-//
-//	err := r.checkMinioSecret(mattermost, reqLogger)
-//	if err != nil {
-//		return err
-//	}
-//
-//	if mattermost.Spec.Filestore.IsExternal() {
-//		return nil
-//	}
-//
-//	return r.checkMinioInstance(mattermost, reqLogger)
-//}
-
-//func (r *MattermostReconciler) checkExternalFilestoreSecret(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error {
-//	secret := &corev1.Secret{}
-//	err := r.Client.Get(context.TODO(), types.NamespacedName{Name: mattermost.Spec.Filestore.External.Secret, Namespace: mattermost.Namespace}, secret)
-//	if err != nil {
-//		reqLogger.Error(err, "failed to check if custom minio secret exists")
-//		return err
-//	}
-//	// Validate custom secret required fields
-//	if _, ok := secret.Data["accesskey"]; !ok {
-//		return fmt.Errorf("external filestore Secret %s does not have an 'accesskey' value", mattermost.Spec.Filestore.External.Secret)
-//	}
-//	if _, ok := secret.Data["secretkey"]; !ok {
-//		return fmt.Errorf("external filestore Secret %s does not have an 'secretkey' value", mattermost.Spec.Filestore.External.Secret)
-//	}
-//	return nil
-//}
-
 func (r *MattermostReconciler) checkMattermostMinioSecret(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (*corev1.Secret, error) {
 	current := &corev1.Secret{}
 	desired := mattermostMinio.SecretV1Beta(mattermost)
@@ -77,7 +43,7 @@ func (r *MattermostReconciler) checkMattermostMinioSecret(mattermost *mattermost
 			return nil, errors.Wrap(err, "failed to update Minio secret")
 		}
 	}
-	
+
 	// Preserve data fields
 	desired.Data = current.Data
 	err = r.update(current, desired, reqLogger)
@@ -95,13 +61,6 @@ func (r *MattermostReconciler) createMinioSecret(mattermost *mattermostv1beta1.M
 	}
 	return desired, nil
 }
-
-//func (r *MattermostReconciler) checkMinioSecret(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error {
-//	if mattermost.Spec.Filestore.IsExternal() {
-//		return r.checkExternalFilestoreSecret(mattermost, reqLogger)
-//	}
-//	return r.checkMattermostMinioSecret(mattermost, reqLogger)
-//}
 
 func (r *MattermostReconciler) checkMinioInstance(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error {
 	desired := mattermostMinio.InstanceV1Beta(mattermost)
