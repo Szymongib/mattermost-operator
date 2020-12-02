@@ -488,4 +488,3 @@ func findContainer(name string, containers []corev1.Container) (int, bool) {
 	}
 	return -1, false
 }
-

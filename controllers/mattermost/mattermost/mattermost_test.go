@@ -54,9 +54,9 @@ func TestCheckMattermost(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: "dbSecret"},
 		Data: map[string][]byte{
 			"ROOT_PASSWORD": []byte("root-pass"),
-			"USER": []byte("user"),
-			"PASSWORD": []byte("pass"),
-			"DATABASE": []byte("db"),
+			"USER":          []byte("user"),
+			"PASSWORD":      []byte("pass"),
+			"DATABASE":      []byte("db"),
 		},
 	})
 	require.NoError(t, err)
@@ -197,7 +197,7 @@ func TestCheckMattermost(t *testing.T) {
 			"test-ingress":                "blabla",
 		}
 
-		err = r.checkMattermostIngress(mm,  mm.Spec.IngressName, mm.Spec.IngressAnnotations, logger)
+		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, mm.Spec.IngressAnnotations, logger)
 		assert.NoError(t, err)
 
 		found := &v1beta1.Ingress{}
@@ -216,7 +216,7 @@ func TestCheckMattermost(t *testing.T) {
 
 		err = r.Client.Update(context.TODO(), modified)
 		require.NoError(t, err)
-		err = r.checkMattermostIngress(mm,  mm.Spec.IngressName, mm.Spec.IngressAnnotations, logger)
+		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, mm.Spec.IngressAnnotations, logger)
 		require.NoError(t, err)
 		err = r.Client.Get(context.TODO(), types.NamespacedName{Name: mmName, Namespace: mmNamespace}, found)
 		require.NoError(t, err)
@@ -250,7 +250,7 @@ func TestCheckMattermost(t *testing.T) {
 		err = r.Client.Create(context.TODO(), job)
 		require.NoError(t, err)
 
-		err = r.checkMattermostDeployment(mm,dbInfo, fileStoreInfo , logger)
+		err = r.checkMattermostDeployment(mm, dbInfo, fileStoreInfo, logger)
 		assert.NoError(t, err)
 
 		dbSetupJob := &batchv1.Job{}
@@ -370,7 +370,7 @@ func TestCheckMattermostExternalDBAndFileStore(t *testing.T) {
 				},
 			},
 			FileStore: mattermostv1beta1.FileStore{
-				External:        &mattermostv1beta1.ExternalFilestore{
+				External: &mattermostv1beta1.ExternalFilestore{
 					URL:    "s3.amazon.com",
 					Bucket: "my-bucket",
 					Secret: "fileStoreSecret",

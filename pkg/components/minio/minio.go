@@ -82,9 +82,9 @@ func InstanceV1Beta(mattermost *mattermostv1beta1.Mattermost) *minioOperator.Min
 
 	return &minioOperator.MinIOInstance{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      minioName,
-			Namespace: mattermost.Namespace,
-			Labels:    mattermostv1alpha1.ClusterInstallationResourceLabels(mattermost.Name),
+			Name:            minioName,
+			Namespace:       mattermost.Namespace,
+			Labels:          mattermostv1alpha1.ClusterInstallationResourceLabels(mattermost.Name),
 			OwnerReferences: mattermostApp.MattermostOwnerReference(mattermost),
 		},
 		Spec: minioOperator.MinIOInstanceSpec{

@@ -14,11 +14,11 @@ const (
 type FileStoreInfo struct {
 	secretName string
 	bucketName string
-	url string
-	config FileStoreConfig
+	url        string
+	config     FileStoreConfig
 }
 
-type ExternalFileStore struct {}
+type ExternalFileStore struct{}
 
 func (e *ExternalFileStore) InitContainers(_ *mattermostv1beta1.Mattermost) []corev1.Container {
 	return []corev1.Container{}
@@ -26,7 +26,7 @@ func (e *ExternalFileStore) InitContainers(_ *mattermostv1beta1.Mattermost) []co
 
 type OperatorManagedMinioConfig struct {
 	secretName string
-	minioURL string
+	minioURL   string
 }
 
 func (e *OperatorManagedMinioConfig) InitContainers(mattermost *mattermostv1beta1.Mattermost) []corev1.Container {
@@ -91,8 +91,8 @@ func NewExternalFileStoreInfo(mattermost *mattermostv1beta1.Mattermost, secret c
 	return &FileStoreInfo{
 		secretName: secret.Name,
 		bucketName: bucket,
-		url: url,
-		config: &ExternalFileStore{},
+		url:        url,
+		config:     &ExternalFileStore{},
 	}, nil
 }
 
@@ -100,7 +100,7 @@ func NewOperatorManagedFileStoreInfo(mattermost *mattermostv1beta1.Mattermost, s
 	return &FileStoreInfo{
 		secretName: secret,
 		bucketName: mattermost.Name,
-		url: minioURL,
-		config: &OperatorManagedMinioConfig{minioURL: minioURL, secretName: secret},
+		url:        minioURL,
+		config:     &OperatorManagedMinioConfig{minioURL: minioURL, secretName: secret},
 	}
 }

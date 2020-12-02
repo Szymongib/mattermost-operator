@@ -23,7 +23,6 @@ import (
 //	WaitForDBSetupContainerName = "init-wait-for-db-setup"
 //)
 
-
 type DatabaseConfig interface {
 	EnvVars(mattermost *mattermostv1beta1.Mattermost) []corev1.EnvVar
 	InitContainers(mattermost *mattermostv1beta1.Mattermost) []corev1.Container
@@ -87,11 +86,11 @@ func GenerateServiceV1Beta(mattermost *mattermostv1beta1.Mattermost, serviceName
 func GenerateIngressV1Beta(mattermost *mattermostv1beta1.Mattermost, name, ingressName string, ingressAnnotations map[string]string) *v1beta1.Ingress {
 	ingress := &v1beta1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: mattermost.Namespace,
-			Labels:    mattermost.MattermostLabels(name),
+			Name:            name,
+			Namespace:       mattermost.Namespace,
+			Labels:          mattermost.MattermostLabels(name),
 			OwnerReferences: MattermostOwnerReference(mattermost),
-			Annotations: ingressAnnotations,
+			Annotations:     ingressAnnotations,
 		},
 		Spec: v1beta1.IngressSpec{
 			Rules: []v1beta1.IngressRule{
@@ -325,9 +324,9 @@ func GenerateDeploymentV1Beta(mattermost *mattermostv1beta1.Mattermost, db Datab
 
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      deploymentName,
-			Namespace: mattermost.Namespace,
-			Labels:    mattermost.MattermostLabels(deploymentName),
+			Name:            deploymentName,
+			Namespace:       mattermost.Namespace,
+			Labels:          mattermost.MattermostLabels(deploymentName),
 			OwnerReferences: MattermostOwnerReference(mattermost),
 		},
 		Spec: appsv1.DeploymentSpec{
@@ -388,9 +387,9 @@ func GenerateDeploymentV1Beta(mattermost *mattermostv1beta1.Mattermost, db Datab
 func GenerateSecretV1Beta(mattermost *mattermostv1beta1.Mattermost, secretName string, labels map[string]string, values map[string][]byte) *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Labels:    labels,
-			Name:      secretName,
-			Namespace: mattermost.Namespace,
+			Labels:          labels,
+			Name:            secretName,
+			Namespace:       mattermost.Namespace,
 			OwnerReferences: MattermostOwnerReference(mattermost),
 		},
 		Data: values,
@@ -456,15 +455,15 @@ func MattermostOwnerReference(mattermost *mattermostv1beta1.Mattermost) []metav1
 // Returned service is expected to be completed by the caller.
 func newServiceV1Beta(mattermost *mattermostv1beta1.Mattermost, serviceName, selectorName string, annotations map[string]string) *corev1.Service {
 	return &corev1.Service{
-			ObjectMeta: metav1.ObjectMeta{
-				Labels:          mattermost.MattermostLabels(serviceName),
-				Name:            serviceName,
-				Namespace:       mattermost.Namespace,
-				OwnerReferences: MattermostOwnerReference(mattermost),
-				Annotations: annotations,
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:          mattermost.MattermostLabels(serviceName),
+			Name:            serviceName,
+			Namespace:       mattermost.Namespace,
+			OwnerReferences: MattermostOwnerReference(mattermost),
+			Annotations:     annotations,
 		},
 		Spec: corev1.ServiceSpec{
-		Selector: mattermostv1beta1.MattermostSelectorLabels(selectorName),
-	},
+			Selector: mattermostv1beta1.MattermostSelectorLabels(selectorName),
+		},
 	}
 }

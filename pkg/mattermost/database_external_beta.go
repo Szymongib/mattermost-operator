@@ -8,7 +8,7 @@ import (
 )
 
 type ExternalDBConfig struct {
-	secretName string
+	secretName         string
 	dbType             string
 	hasReaderEndpoints bool
 	hasDBCheckURL      bool
@@ -32,7 +32,7 @@ func NewExternalDBInfo(mattermost *mattermostv1beta1.Mattermost, secret corev1.S
 
 	externalDB := &ExternalDBConfig{
 		secretName: mattermost.Spec.Database.External.Secret,
-		dbType:    database.GetTypeFromConnectionString(string(connectionStr)),
+		dbType:     database.GetTypeFromConnectionString(string(connectionStr)),
 	}
 
 	if _, ok := secret.Data["MM_SQLSETTINGS_DATASOURCEREPLICAS"]; ok {

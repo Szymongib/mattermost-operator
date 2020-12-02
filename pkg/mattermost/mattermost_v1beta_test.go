@@ -103,11 +103,11 @@ func TestGenerateIngress_V1Beta(t *testing.T) {
 
 func TestGenerateDeployment_V1Beta(t *testing.T) {
 	tests := []struct {
-		name     string
-		spec     mattermostv1beta1.MattermostSpec
-		database DatabaseConfig
+		name      string
+		spec      mattermostv1beta1.MattermostSpec
+		database  DatabaseConfig
 		fileStore *FileStoreInfo
-		want     *appsv1.Deployment
+		want      *appsv1.Deployment
 	}{
 		{
 			name: "has license",
@@ -134,14 +134,14 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 			},
 		},
 		{
-			name: "external database",
-			spec: mattermostv1beta1.MattermostSpec{},
+			name:     "external database",
+			spec:     mattermostv1beta1.MattermostSpec{},
 			database: &ExternalDBConfig{secretName: "database-secret"},
 			want:     &appsv1.Deployment{},
 		},
 		{
-			name: "external database with reader endpoints",
-			spec: mattermostv1beta1.MattermostSpec{},
+			name:     "external database with reader endpoints",
+			spec:     mattermostv1beta1.MattermostSpec{},
 			database: &ExternalDBConfig{secretName: "database-secret", hasReaderEndpoints: true},
 			want:     &appsv1.Deployment{},
 		},
@@ -149,9 +149,9 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 			name: "external known database with check url",
 			spec: mattermostv1beta1.MattermostSpec{},
 			database: &ExternalDBConfig{
-				secretName: "database-secret",
+				secretName:    "database-secret",
 				hasDBCheckURL: true,
-				dbType: database.PostgreSQLDatabase,
+				dbType:        database.PostgreSQLDatabase,
 			},
 			want: &appsv1.Deployment{},
 		},
@@ -159,9 +159,9 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 			name: "external unknown database with check url",
 			spec: mattermostv1beta1.MattermostSpec{},
 			database: &ExternalDBConfig{
-				secretName: "database-secret",
+				secretName:    "database-secret",
 				hasDBCheckURL: true,
-				dbType: "cockroach",
+				dbType:        "cockroach",
 			},
 			want: &appsv1.Deployment{},
 		},
@@ -171,8 +171,8 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 			fileStore: &FileStoreInfo{
 				secretName: "file-store-secret",
 				bucketName: "file-store-bucket",
-				url: "s3.amazon.com",
-				config: &ExternalFileStore{},
+				url:        "s3.amazon.com",
+				config:     &ExternalFileStore{},
 			},
 			want: &appsv1.Deployment{},
 		},
@@ -306,7 +306,7 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 		{
 			name: "volumes",
 			spec: mattermostv1beta1.MattermostSpec{
-				Volumes: []corev1.Volume{fixVolume()},
+				Volumes:      []corev1.Volume{fixVolume()},
 				VolumeMounts: []corev1.VolumeMount{fixVolumeMount()},
 			},
 			want: &appsv1.Deployment{
@@ -323,8 +323,8 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 			name: "volumes and licence",
 			spec: mattermostv1beta1.MattermostSpec{
 				LicenseSecret: "license-secret",
-				Volumes: []corev1.Volume{fixVolume()},
-				VolumeMounts: []corev1.VolumeMount{fixVolumeMount()},
+				Volumes:       []corev1.Volume{fixVolume()},
+				VolumeMounts:  []corev1.VolumeMount{fixVolumeMount()},
 			},
 			want: &appsv1.Deployment{
 				Spec: appsv1.DeploymentSpec{
@@ -362,7 +362,7 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 				fileStoreInfo = NewOperatorManagedFileStoreInfo(mattermost, "minio-secret", "http://minio")
 			}
 
-			deployment := GenerateDeploymentV1Beta(mattermost, databaseConfig, fileStoreInfo, "","", "service-account", "")
+			deployment := GenerateDeploymentV1Beta(mattermost, databaseConfig, fileStoreInfo, "", "", "service-account", "")
 			require.NotNil(t, deployment)
 
 			assert.Equal(t, "service-account", deployment.Spec.Template.Spec.ServiceAccountName)
@@ -456,13 +456,12 @@ func TestGenerateRBACResources_V1Beta(t *testing.T) {
 //	assert.Fail(t, fmt.Sprintf("failed to find env var %s", name))
 //}
 
-
 func fixVolume() corev1.Volume {
-	return corev1.Volume					{
-		Name:         "test-volume",
+	return corev1.Volume{
+		Name: "test-volume",
 		VolumeSource: corev1.VolumeSource{
 			Secret: &corev1.SecretVolumeSource{
-				SecretName:  "mounted-secret",
+				SecretName: "mounted-secret",
 			},
 		},
 	}
@@ -470,7 +469,7 @@ func fixVolume() corev1.Volume {
 
 func fixVolumeMount() corev1.VolumeMount {
 	return corev1.VolumeMount{
-			Name:             "test-volume",
-			MountPath:        "/etc/test",
-		}
+		Name:      "test-volume",
+		MountPath: "/etc/test",
+	}
 }

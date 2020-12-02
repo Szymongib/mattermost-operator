@@ -8,7 +8,7 @@ import (
 )
 
 type MySQLDBConfig struct {
-	secretName string
+	secretName   string
 	rootPassword string
 	userName     string
 	userPassword string
@@ -34,11 +34,11 @@ func NewMySQLDB(secret corev1.Secret) (*MySQLDBConfig, error) {
 	}
 
 	return &MySQLDBConfig{
-		secretName: secret.Name,
-		rootPassword:     rootPassword,
-		userName: userName,
-		userPassword:     userPassword,
-		databaseName:     databaseName,
+		secretName:   secret.Name,
+		rootPassword: rootPassword,
+		userName:     userName,
+		userPassword: userPassword,
+		databaseName: databaseName,
 	}, nil
 
 }
@@ -105,4 +105,3 @@ func (m *MySQLDBConfig) InitContainers(mattermost *mattermostv1beta1.Mattermost)
 		},
 	}
 }
-

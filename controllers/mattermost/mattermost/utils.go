@@ -183,7 +183,6 @@ func (r *MattermostReconciler) checkRolloutStarted(name, namespace string, listO
 	return nil
 }
 
-
 func (r *MattermostReconciler) checkSecret(secretName, keyName, namespace string) error {
 	foundSecret := &corev1.Secret{}
 	err := r.Client.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: namespace}, foundSecret)

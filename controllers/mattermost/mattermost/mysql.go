@@ -16,7 +16,7 @@ import (
 	mattermostmysql "github.com/mattermost/mattermost-operator/pkg/components/mysql"
 )
 
-func (r *MattermostReconciler) checkOperatorManagedMySQL(mattermost  *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (mattermostApp.DatabaseConfig, error) {
+func (r *MattermostReconciler) checkOperatorManagedMySQL(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (mattermostApp.DatabaseConfig, error) {
 	reqLogger = reqLogger.WithValues("Reconcile", "mysql")
 
 	err := r.checkMySQLCluster(mattermost, reqLogger)
@@ -57,7 +57,7 @@ func (r *MattermostReconciler) createMySQLClusterIfNotExists(mattermost *matterm
 	return nil
 }
 
-func (r *MattermostReconciler) getOrCreateMySQLSecrets(mattermost  *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (mattermostApp.DatabaseConfig, error) {
+func (r *MattermostReconciler) getOrCreateMySQLSecrets(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (mattermostApp.DatabaseConfig, error) {
 	var err error
 	dbSecret := &corev1.Secret{}
 	dbSecretName := mattermostmysql.DefaultDatabaseSecretName(mattermost.Name)

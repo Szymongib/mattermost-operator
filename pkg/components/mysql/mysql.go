@@ -72,9 +72,9 @@ func Cluster(mattermost *mattermostv1alpha1.ClusterInstallation) *mysqlOperator.
 func ClusterV1Beta(mattermost *mattermostv1beta1.Mattermost) *mysqlOperator.MysqlCluster {
 	mysql := &mysqlOperator.MysqlCluster{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      componentUtils.HashWithPrefix("db", mattermost.Name),
-			Namespace: mattermost.Namespace,
-			Labels:    mattermostv1alpha1.ClusterInstallationResourceLabels(mattermost.Name),
+			Name:            componentUtils.HashWithPrefix("db", mattermost.Name),
+			Namespace:       mattermost.Namespace,
+			Labels:          mattermostv1alpha1.ClusterInstallationResourceLabels(mattermost.Name),
 			OwnerReferences: mattermostApp.MattermostOwnerReference(mattermost),
 		},
 		Spec: mysqlOperator.MysqlClusterSpec{
