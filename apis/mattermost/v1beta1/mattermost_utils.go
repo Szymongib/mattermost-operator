@@ -64,12 +64,6 @@ func (mm *Mattermost) SetDefaults() error {
 // from a deployment.
 func GetMattermostAppContainerFromDeployment(deployment *appsv1.Deployment) *corev1.Container {
 	container := getDeploymentContainerByName(deployment, MattermostAppContainerName)
-
-	// TODO: change the container name during the migration?
-	//if container == nil {
-	//	// Check old-style - name of the container == name of the deployment
-	//	container = mm.getDeploymentContainerByName(deployment, deployment.Name)
-	//}
 	return container
 }
 
@@ -77,12 +71,6 @@ func GetMattermostAppContainerFromDeployment(deployment *appsv1.Deployment) *cor
 // from a deployment.
 func GetMattermostAppContainer(containers []corev1.Container) *corev1.Container {
 	container := getContainerByName(containers, MattermostAppContainerName)
-
-	// TODO: change the container name during the migration?
-	//if container == nil {
-	//	// Check old-style - name of the container == name of the deployment
-	//	container = getContainerByName(containers, mm.Name)
-	//}
 	return container
 }
 

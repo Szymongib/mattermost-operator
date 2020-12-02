@@ -79,13 +79,57 @@ func (e *ExternalDBConfig) EnvVars(_ *mattermostv1beta1.Mattermost) []corev1.Env
 
 func (e *ExternalDBConfig) InitContainers(_ *mattermostv1beta1.Mattermost) []corev1.Container {
 	var initContainers []corev1.Container
-	// TODO: move this func here
 	if e.hasDBCheckURL {
-		container := GetDBCheckInitContainerV1Beta(e.secretName, e.dbType)
+		container := getDBCheckInitContainerV1Beta(e.secretName, e.dbType)
 		if container != nil {
 			initContainers = append(initContainers, *container)
 		}
 	}
 
 	return initContainers
+}
+
+// GetDBCheckInitContainer tries to prepare init container that checks database readiness.
+// Returns nil if database type is unknown.
+func getDBCheckInitContainerV1Beta(secretName, dbType string) *corev1.Container {
+	envVars := []corev1.EnvVar{
+		{
+			Name: "DB_CONNECTION_CHECK_URL",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: secretName,
+					},
+					Key: "DB_CONNECTION_CHECK_URL",
+				},
+			},
+		},
+	}
+
+	switch dbType {
+	case database.MySQLDatabase:
+		return &corev1.Container{
+			Name:            "init-check-database",
+			Image:           "appropriate/curl:latest",
+			ImagePullPolicy: corev1.PullIfNotPresent,
+			Env:             envVars,
+			Command: []string{
+				"sh", "-c",
+				"until curl --max-time 5 $DB_CONNECTION_CHECK_URL; do echo waiting for database; sleep 5; done;",
+			},
+		}
+	case database.PostgreSQLDatabase:
+		return &corev1.Container{
+			Name:            "init-check-database",
+			Image:           "postgres:13",
+			ImagePullPolicy: corev1.PullIfNotPresent,
+			Env:             envVars,
+			Command: []string{
+				"sh", "-c",
+				"until pg_isready --dbname=\"$DB_CONNECTION_CHECK_URL\"; do echo waiting for database; sleep 5; done;",
+			},
+		}
+	default:
+		return nil
+	}
 }

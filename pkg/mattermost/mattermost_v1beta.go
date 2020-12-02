@@ -9,8 +9,6 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 
 	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
-	"github.com/mattermost/mattermost-operator/pkg/database"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1beta1 "k8s.io/api/extensions/v1beta1"
@@ -323,7 +321,7 @@ func GenerateDeploymentV1Beta(mattermost *mattermostv1beta1.Mattermost, db Datab
 	maxUnavailable := intstr.FromInt(defaultMaxUnavailable)
 	maxSurge := intstr.FromInt(defaultMaxSurge)
 
-	liveness, readiness := setProbes(mattermost.Spec.Advanced.LivenessProbe, mattermost.Spec.Advanced.ReadinessProbe)
+	liveness, readiness := setProbes(mattermost.Spec.Probes.LivenessProbe, mattermost.Spec.Probes.ReadinessProbe)
 
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -374,12 +372,12 @@ func GenerateDeploymentV1Beta(mattermost *mattermostv1beta1.Mattermost, db Datab
 							ReadinessProbe: readiness,
 							LivenessProbe:  liveness,
 							VolumeMounts:   volumeMounts,
-							Resources:      mattermost.Spec.Advanced.Resources,
+							Resources:      mattermost.Spec.Scheduling.Resources,
 						},
 					},
 					Volumes:      volumes,
-					Affinity:     mattermost.Spec.Advanced.Affinity,
-					NodeSelector: mattermost.Spec.Advanced.NodeSelector,
+					Affinity:     mattermost.Spec.Scheduling.Affinity,
+					NodeSelector: mattermost.Spec.Scheduling.NodeSelector,
 				},
 			},
 		},
@@ -468,50 +466,5 @@ func newServiceV1Beta(mattermost *mattermostv1beta1.Mattermost, serviceName, sel
 		Spec: corev1.ServiceSpec{
 		Selector: mattermostv1beta1.MattermostSelectorLabels(selectorName),
 	},
-	}
-}
-
-// GetDBCheckInitContainer tries to prepare init container that checks database readiness.
-// Returns nil if database type is unknown.
-func GetDBCheckInitContainerV1Beta(secretName, dbType string) *corev1.Container {
-	envVars := []corev1.EnvVar{
-		{
-			Name: "DB_CONNECTION_CHECK_URL",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: secretName,
-					},
-					Key: "DB_CONNECTION_CHECK_URL",
-				},
-			},
-		},
-	}
-
-	switch dbType {
-	case database.MySQLDatabase:
-		return &corev1.Container{
-			Name:            "init-check-database",
-			Image:           "appropriate/curl:latest",
-			ImagePullPolicy: corev1.PullIfNotPresent,
-			Env:             envVars,
-			Command: []string{
-				"sh", "-c",
-				"until curl --max-time 5 $DB_CONNECTION_CHECK_URL; do echo waiting for database; sleep 5; done;",
-			},
-		}
-	case database.PostgreSQLDatabase:
-		return &corev1.Container{
-			Name:            "init-check-database",
-			Image:           "postgres:13",
-			ImagePullPolicy: corev1.PullIfNotPresent,
-			Env:             envVars,
-			Command: []string{
-				"sh", "-c",
-				"until pg_isready --dbname=\"$DB_CONNECTION_CHECK_URL\"; do echo waiting for database; sleep 5; done;",
-			},
-		}
-	default:
-		return nil
 	}
 }

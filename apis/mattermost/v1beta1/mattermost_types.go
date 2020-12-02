@@ -30,7 +30,7 @@ type MattermostSpec struct {
 	// Accepted values are: 100users, 1000users, 5000users, 10000users,
 	// and 250000users. If replicas and resource requests/limits are not
 	// specified, and Size is not provided the configuration for 5000users will
-	// be applied. Setting 'Replicas', 'Advanced.Resources', 'FileStore.Replicas',
+	// be applied. Setting 'Replicas', 'Scheduling.Resources', 'FileStore.Replicas',
 	// 'FileStore.Resource', 'Database.Replicas', or 'Database.Resources' will
 	// override the values set by Size. Setting new Size will override previous
 	// values regardless if set by Size or manually.
@@ -70,19 +70,27 @@ type MattermostSpec struct {
 	// +optional
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
 
-	// Advanced contains additional advanced settings for Mattermost. These
-	// settings generally don't need to be changed.
-	Advanced Advanced `json:"advanced,omitempty"`
-
 	// External Services
 	Database      Database      `json:"database,omitempty"`
 	FileStore     FileStore     `json:"fileStore,omitempty"`
 	ElasticSearch ElasticSearch `json:"elasticSearch,omitempty"`
+
+	// Advanced settings - it is recommended to leave the default configuration
+	// for below settings, unless a very specific use case arises.
+
+	// Scheduling defines the configuration related to scheduling of the Mattermost pods
+	// as well as resource constraints. These settings generally don't need to be changed.
+	// +optional
+	Scheduling Scheduling `json:"scheduling,omitempty"`
+	// Probes defines configuration of liveness and readiness probe for Mattermost pods.
+	// These settings generally don't need to be changed.
+	// +optional
+	Probes Probes `json:"probes,omitempty"`
 }
 
-// Advanced defines the advanced configuration for Mattermost. These settings
-// should be correct for most types of deployments.
-type Advanced struct {
+// Scheduling defines the configuration related to scheduling of the Mattermost pods
+// as well as resource constraints.
+type Scheduling struct {
 	// Defines the resource requests and limits for the Mattermost app server pods.
 	// +optional
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
@@ -94,6 +102,10 @@ type Advanced struct {
 	// If specified, affinity will define the pod's scheduling constraints
 	// +optional
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
+}
+
+// Probes defines configuration of liveness and readiness probe for Mattermost pods.
+type Probes struct {
 	// Defines the probe to check if the application is up and running.
 	// +optional
 	LivenessProbe v1.Probe `json:"livenessProbe,omitempty"`
@@ -110,36 +122,16 @@ type Database struct {
 	// Defines the configuration of database managed by Kubernetes operator.
 	// +optional
 	OperatorManaged *OperatorManagedDatabase `json:"operatorManaged,omitempty"`
-
-	// TODO: clean this up
-	//// Optionally enter the name of an already-existing Secret for connecting to
-	//// the database. This secret should be configured as follows:
-	////
-	//// User-Managed Database
-	////   - Key: DB_CONNECTION_STRING | Value: <FULL_DATABASE_CONNECTION_STRING>
-	//// Operator-Managed Database
-	////   - Key: ROOT_PASSWORD | Value: <ROOT_DATABASE_PASSWORD>
-	////   - Key: USER | Value: <USER_NAME>
-	////   - Key: PASSWORD | Value: <USER_PASSWORD>
-	////   - Key: DATABASE Value: <DATABASE_NAME>
-	////
-	//// Notes:
-	////   If you define all secret values for both User-Managed and
-	////   Operator-Managed database types, the User-Managed connection string will
-	////   take precedence and the Operator-Managed values will be ignored. If the
-	////   secret is left blank, the default behavior is to use an Operator-Managed
-	////   database with strong randomly-generated database credentials.
-	//// +optional
-	//Secret string `json:"secret,omitempty"`
 }
 
 // ExternalDatabase defines the configuration of the external database that should be used by Mattermost.
 type ExternalDatabase struct {
-	// TODO: make it better
-	// TODO: optional fields?
 	// Secret contains data necessary to connect to the external database.
 	// The Kubernetes Secret should contain:
-	//   - Key: DB_CONNECTION_STRING | Value: <FULL_DATABASE_CONNECTION_STRING>
+	//   - Key: DB_CONNECTION_STRING | Value: Full database connection string.
+	// It can also contain optional fields, such as:
+	//   - Key: MM_SQLSETTINGS_DATASOURCEREPLICAS | Value: Connection string to read replicas of the database.
+	//   - Key: DB_CONNECTION_CHECK_URL | Value: The URL used for checking that the database is accessible.
 	Secret string `json:"secret,omitempty"`
 }
 
