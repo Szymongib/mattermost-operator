@@ -61,7 +61,7 @@ func TestCheckMattermost(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	fileStoreInfo, err := mattermostApp.NewOperatorManagedFileStoreInfo(mm, "fileStoreSecret", "http://minio:9000")
+	fileStoreInfo := mattermostApp.NewOperatorManagedFileStoreInfo(mm, "fileStoreSecret", "http://minio:9000")
 	require.NoError(t, err)
 
 	s := prepareSchema(t, scheme.Scheme)
@@ -369,7 +369,7 @@ func TestCheckMattermostExternalDBAndFileStore(t *testing.T) {
 					Secret: externalDBSecretName,
 				},
 			},
-			Filestore: mattermostv1beta1.Filestore{
+			FileStore: mattermostv1beta1.FileStore{
 				External:        &mattermostv1beta1.ExternalFilestore{
 					URL:    "s3.amazon.com",
 					Bucket: "my-bucket",
