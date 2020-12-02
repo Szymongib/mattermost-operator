@@ -179,7 +179,7 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 		{
 			name: "node selector 1",
 			spec: mattermostv1beta1.MattermostSpec{
-				Advanced: mattermostv1beta1.Advanced{
+				Scheduling: mattermostv1beta1.Scheduling{
 					NodeSelector: map[string]string{"type": "compute"},
 				},
 			},
@@ -196,7 +196,7 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 		{
 			name: "node selector 2",
 			spec: mattermostv1beta1.MattermostSpec{
-				Advanced: mattermostv1beta1.Advanced{
+				Scheduling: mattermostv1beta1.Scheduling{
 					NodeSelector: map[string]string{"type": "compute", "size": "big", "region": "iceland"},
 				},
 			},
@@ -213,7 +213,7 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 		{
 			name: "node selector nil",
 			spec: mattermostv1beta1.MattermostSpec{
-				Advanced: mattermostv1beta1.Advanced{
+				Scheduling: mattermostv1beta1.Scheduling{
 					NodeSelector: nil,
 				},
 			},
@@ -230,7 +230,7 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 		{
 			name: "affinity 1",
 			spec: mattermostv1beta1.MattermostSpec{
-				Advanced: mattermostv1beta1.Advanced{
+				Scheduling: mattermostv1beta1.Scheduling{
 					Affinity: &corev1.Affinity{
 						PodAffinity: &corev1.PodAffinity{
 							RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
@@ -267,7 +267,7 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 		{
 			name: "affinity nil",
 			spec: mattermostv1beta1.MattermostSpec{
-				Advanced: mattermostv1beta1.Advanced{
+				Scheduling: mattermostv1beta1.Scheduling{
 					Affinity: nil,
 				},
 			},
