@@ -5,10 +5,10 @@ package v1beta1
 
 import "github.com/mattermost/mattermost-operator/pkg/utils"
 
-// Filestore utils
+// FileStore utils
 
-// SetDefaults sets the missing values in Filestore to the default ones.
-func (fs *Filestore) SetDefaults() {
+// SetDefaults sets the missing values in FileStore to the default ones.
+func (fs *FileStore) SetDefaults() {
 	if fs.IsExternal() {
 		return
 	}
@@ -18,11 +18,11 @@ func (fs *Filestore) SetDefaults() {
 }
 
 // IsExternal returns true if the MinIO/S3 instance is external.
-func (fs *Filestore) IsExternal() bool {
+func (fs *FileStore) IsExternal() bool {
 	return fs.External != nil && fs.External.URL != ""
 }
 
-func (fs *Filestore) ensureDefault() {
+func (fs *FileStore) ensureDefault() {
 	if fs.OperatorManaged == nil {
 		fs.OperatorManaged = &OperatorManagedMinio{}
 	}
@@ -35,7 +35,7 @@ func (omm *OperatorManagedMinio) SetDefaults() {
 	}
 }
 
-func (fs *Filestore) SetDefaultReplicasAndResources() {
+func (fs *FileStore) SetDefaultReplicasAndResources() {
 	if fs.IsExternal() {
 		return
 	}
@@ -52,7 +52,7 @@ func (omm *OperatorManagedMinio) SetDefaultReplicasAndResources() {
 	}
 }
 
-func (fs *Filestore) OverrideReplicasAndResourcesFromSize(size MattermostSize) {
+func (fs *FileStore) OverrideReplicasAndResourcesFromSize(size MattermostSize) {
 	if fs.IsExternal() {
 		return
 	}

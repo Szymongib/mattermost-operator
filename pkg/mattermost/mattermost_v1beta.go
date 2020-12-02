@@ -276,23 +276,24 @@ func GenerateDeploymentV1Beta(mattermost *mattermostv1beta1.Mattermost, db Datab
 		Value: valueSize,
 	})
 
-	// Mattermost License
-	volumeLicense := []corev1.Volume{}
-	volumeMountLicense := []corev1.VolumeMount{}
+	volumes := mattermost.Spec.Volumes
+	volumeMounts := mattermost.Spec.VolumeMounts
 	podAnnotations := map[string]string{}
+
+	// Mattermost License
 	if len(mattermost.Spec.LicenseSecret) != 0 {
 		envVarGeneral = append(envVarGeneral, corev1.EnvVar{
 			Name:  "MM_SERVICESETTINGS_LICENSEFILELOCATION",
 			Value: "/mattermost-license/license",
 		})
 
-		volumeMountLicense = append(volumeMountLicense, corev1.VolumeMount{
+		volumeMounts = append(volumeMounts, corev1.VolumeMount{
 			MountPath: "/mattermost-license",
 			Name:      "mattermost-license",
 			ReadOnly:  true,
 		})
 
-		volumeLicense = append(volumeLicense, corev1.Volume{
+		volumes = append(volumes, corev1.Volume{
 			Name: "mattermost-license",
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
@@ -372,11 +373,11 @@ func GenerateDeploymentV1Beta(mattermost *mattermostv1beta1.Mattermost, db Datab
 							},
 							ReadinessProbe: readiness,
 							LivenessProbe:  liveness,
-							VolumeMounts:   volumeMountLicense,
+							VolumeMounts:   volumeMounts,
 							Resources:      mattermost.Spec.Advanced.Resources,
 						},
 					},
-					Volumes:      volumeLicense,
+					Volumes:      volumes,
 					Affinity:     mattermost.Spec.Advanced.Affinity,
 					NodeSelector: mattermost.Spec.Advanced.NodeSelector,
 				},

@@ -27,7 +27,7 @@ func InstanceV1Beta(mattermost *mattermostv1beta1.Mattermost) *minioOperator.Min
 			OwnerReferences: mattermostApp.MattermostOwnerReference(mattermost),
 		},
 		Spec: minioOperator.MinIOInstanceSpec{
-			Replicas:    *mattermost.Spec.Filestore.OperatorManaged.Replicas,
+			Replicas:    *mattermost.Spec.FileStore.OperatorManaged.Replicas,
 			Mountpath:   "/export",
 			CredsSecret: &corev1.LocalObjectReference{Name: minioName},
 			VolumeClaimTemplate: &corev1.PersistentVolumeClaim{
@@ -40,7 +40,7 @@ func InstanceV1Beta(mattermost *mattermostv1beta1.Mattermost) *minioOperator.Min
 					},
 					Resources: corev1.ResourceRequirements{
 						Requests: corev1.ResourceList{
-							corev1.ResourceStorage: resource.MustParse(mattermost.Spec.Filestore.OperatorManaged.StorageSize),
+							corev1.ResourceStorage: resource.MustParse(mattermost.Spec.FileStore.OperatorManaged.StorageSize),
 						},
 					},
 				},

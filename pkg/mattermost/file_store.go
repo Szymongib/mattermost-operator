@@ -24,12 +24,12 @@ func (e *ExternalFileStore) InitContainers(_ *mattermostv1beta1.Mattermost) []co
 	return []corev1.Container{}
 }
 
-type OperatorManagedMinio struct {
+type OperatorManagedMinioConfig struct {
 	secretName string
 	minioURL string
 }
 
-func (e *OperatorManagedMinio) InitContainers(mattermost *mattermostv1beta1.Mattermost) []corev1.Container {
+func (e *OperatorManagedMinioConfig) InitContainers(mattermost *mattermostv1beta1.Mattermost) []corev1.Container {
 	initContainers := []corev1.Container{
 		// Create the init container to create the MinIO bucket
 		corev1.Container{
@@ -67,16 +67,16 @@ func (e *OperatorManagedMinio) InitContainers(mattermost *mattermostv1beta1.Matt
 }
 
 func NewExternalFileStoreInfo(mattermost *mattermostv1beta1.Mattermost, secret corev1.Secret) (*FileStoreInfo, error) {
-	if mattermost.Spec.Filestore.External == nil {
+	if mattermost.Spec.FileStore.External == nil {
 		return nil, fmt.Errorf("external file store configuration not provided")
 	}
 
-	bucket := mattermost.Spec.Filestore.External.Bucket
+	bucket := mattermost.Spec.FileStore.External.Bucket
 	if bucket == "" {
 		return nil, fmt.Errorf("external file store bucket is empty")
 	}
 
-	url := mattermost.Spec.Filestore.External.URL
+	url := mattermost.Spec.FileStore.External.URL
 	if url == "" {
 		return nil, fmt.Errorf("external file store URL is empty")
 	}
@@ -96,14 +96,11 @@ func NewExternalFileStoreInfo(mattermost *mattermostv1beta1.Mattermost, secret c
 	}, nil
 }
 
-func NewOperatorManagedFileStoreInfo(mattermost *mattermostv1beta1.Mattermost, secret, minioURL string) (*FileStoreInfo, error) {
-
-	// TODO: check secret?
-
+func NewOperatorManagedFileStoreInfo(mattermost *mattermostv1beta1.Mattermost, secret, minioURL string) *FileStoreInfo {
 	return &FileStoreInfo{
 		secretName: secret,
 		bucketName: mattermost.Name,
 		url: minioURL,
-		config: &OperatorManagedMinio{minioURL: minioURL, secretName: secret},
-	}, nil
+		config: &OperatorManagedMinioConfig{minioURL: minioURL, secretName: secret},
+	}
 }

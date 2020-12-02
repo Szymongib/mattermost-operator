@@ -71,8 +71,8 @@ func TestMattermost(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, size1000.App.Replicas, *tmm.Spec.Replicas)
 			assert.Equal(t, size1000.App.Resources.String(), tmm.Spec.Advanced.Resources.String())
-			assert.Equal(t, size1000.Minio.Replicas, *tmm.Spec.Filestore.OperatorManaged.Replicas)
-			assert.Equal(t, size1000.Minio.Resources.String(), tmm.Spec.Filestore.OperatorManaged.Resources.String())
+			assert.Equal(t, size1000.Minio.Replicas, *tmm.Spec.FileStore.OperatorManaged.Replicas)
+			assert.Equal(t, size1000.Minio.Resources.String(), tmm.Spec.FileStore.OperatorManaged.Resources.String())
 			assert.Equal(t, size1000.Database.Replicas, *tmm.Spec.Database.OperatorManaged.Replicas)
 			assert.Equal(t, size1000.Database.Resources.String(), tmm.Spec.Database.OperatorManaged.Resources.String())
 			assert.Equal(t, "", tmm.Spec.Size)
@@ -90,7 +90,7 @@ func TestMattermost(t *testing.T) {
 			overriddenReplicas := int32(7)
 			tmm.Spec.Replicas = utils.NewInt32(overriddenReplicas)
 			tmm.Spec.Advanced.Resources = resources
-			tmm.Spec.Filestore.OperatorManaged = &OperatorManagedMinio{
+			tmm.Spec.FileStore.OperatorManaged = &OperatorManagedMinio{
 				Resources: resources,
 				Replicas:  utils.NewInt32(overriddenReplicas),
 			}
@@ -103,8 +103,8 @@ func TestMattermost(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, size1000.App.Replicas, *tmm.Spec.Replicas)
 			assert.Equal(t, size1000.App.Resources.String(), tmm.Spec.Advanced.Resources.String())
-			assert.Equal(t, size1000.Minio.Replicas, *tmm.Spec.Filestore.OperatorManaged.Replicas)
-			assert.Equal(t, size1000.Minio.Resources.String(), tmm.Spec.Filestore.OperatorManaged.Resources.String())
+			assert.Equal(t, size1000.Minio.Replicas, *tmm.Spec.FileStore.OperatorManaged.Replicas)
+			assert.Equal(t, size1000.Minio.Resources.String(), tmm.Spec.FileStore.OperatorManaged.Resources.String())
 			assert.Equal(t, size1000.Database.Replicas, *tmm.Spec.Database.OperatorManaged.Replicas)
 			assert.Equal(t, size1000.Database.Resources.String(), tmm.Spec.Database.OperatorManaged.Resources.String())
 			assert.Equal(t, "", tmm.Spec.Size)
@@ -117,8 +117,8 @@ func TestMattermost(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, defaultSize.App.Replicas, *tmm.Spec.Replicas)
 			assert.Equal(t, defaultSize.App.Resources.String(), tmm.Spec.Advanced.Resources.String())
-			assert.Equal(t, defaultSize.Minio.Replicas, *tmm.Spec.Filestore.OperatorManaged.Replicas)
-			assert.Equal(t, defaultSize.Minio.Resources.String(), tmm.Spec.Filestore.OperatorManaged.Resources.String())
+			assert.Equal(t, defaultSize.Minio.Replicas, *tmm.Spec.FileStore.OperatorManaged.Replicas)
+			assert.Equal(t, defaultSize.Minio.Resources.String(), tmm.Spec.FileStore.OperatorManaged.Resources.String())
 			assert.Equal(t, defaultSize.Database.Replicas, *tmm.Spec.Database.OperatorManaged.Replicas)
 			assert.Equal(t, defaultSize.Database.Resources.String(), tmm.Spec.Database.OperatorManaged.Resources.String())
 			assert.Equal(t, "", tmm.Spec.Size)
@@ -131,8 +131,8 @@ func TestMattermost(t *testing.T) {
 			assert.Error(t, err)
 			assert.Equal(t, defaultSize.App.Replicas, *tmm.Spec.Replicas)
 			assert.Equal(t, defaultSize.App.Resources.String(), tmm.Spec.Advanced.Resources.String())
-			assert.Equal(t, defaultSize.Minio.Replicas, *tmm.Spec.Filestore.OperatorManaged.Replicas)
-			assert.Equal(t, defaultSize.Minio.Resources.String(), tmm.Spec.Filestore.OperatorManaged.Resources.String())
+			assert.Equal(t, defaultSize.Minio.Replicas, *tmm.Spec.FileStore.OperatorManaged.Replicas)
+			assert.Equal(t, defaultSize.Minio.Resources.String(), tmm.Spec.FileStore.OperatorManaged.Resources.String())
 			assert.Equal(t, defaultSize.Database.Replicas, *tmm.Spec.Database.OperatorManaged.Replicas)
 			assert.Equal(t, defaultSize.Database.Resources.String(), tmm.Spec.Database.OperatorManaged.Resources.String())
 			assert.Equal(t, "", tmm.Spec.Size)

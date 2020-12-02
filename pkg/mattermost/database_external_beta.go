@@ -7,14 +7,14 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-type ExternalDBInfo struct {
+type ExternalDBConfig struct {
 	secretName string
 	dbType             string
 	hasReaderEndpoints bool
 	hasDBCheckURL      bool
 }
 
-func NewExternalDBInfo(mattermost *mattermostv1beta1.Mattermost, secret corev1.Secret) (*ExternalDBInfo, error) {
+func NewExternalDBInfo(mattermost *mattermostv1beta1.Mattermost, secret corev1.Secret) (*ExternalDBConfig, error) {
 	if mattermost.Spec.Database.External == nil {
 		return nil, fmt.Errorf("external database config not provided")
 	}
@@ -30,7 +30,7 @@ func NewExternalDBInfo(mattermost *mattermostv1beta1.Mattermost, secret corev1.S
 		return nil, fmt.Errorf("external database connection string is empty")
 	}
 
-	externalDB := &ExternalDBInfo{
+	externalDB := &ExternalDBConfig{
 		secretName: mattermost.Spec.Database.External.Secret,
 		dbType:    database.GetTypeFromConnectionString(string(connectionStr)),
 	}
@@ -45,7 +45,7 @@ func NewExternalDBInfo(mattermost *mattermostv1beta1.Mattermost, secret corev1.S
 	return externalDB, nil
 }
 
-func (e *ExternalDBInfo) EnvVars(_ *mattermostv1beta1.Mattermost) []corev1.EnvVar {
+func (e *ExternalDBConfig) EnvVars(_ *mattermostv1beta1.Mattermost) []corev1.EnvVar {
 	var dbEnvVars []corev1.EnvVar = []corev1.EnvVar{
 		{
 			Name: "MM_CONFIG",
@@ -77,7 +77,7 @@ func (e *ExternalDBInfo) EnvVars(_ *mattermostv1beta1.Mattermost) []corev1.EnvVa
 	return dbEnvVars
 }
 
-func (e *ExternalDBInfo) InitContainers(_ *mattermostv1beta1.Mattermost) []corev1.Container {
+func (e *ExternalDBConfig) InitContainers(_ *mattermostv1beta1.Mattermost) []corev1.Container {
 	var initContainers []corev1.Container
 	// TODO: move this func here
 	if e.hasDBCheckURL {

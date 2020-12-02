@@ -209,6 +209,13 @@ func (r *MattermostReconciler) checkMattermostDBSetupJob(mattermost *mattermostv
 	desiredJob := prepareJobTemplate(mattermost, deployment, mattermostApp.SetupJobName)
 	desiredJob.OwnerReferences = mattermostApp.MattermostOwnerReference(mattermost)
 
+	fmt.Println("ENV JOB:   ")
+	for _, env := range desiredJob.Spec.Template.Spec.Containers[0].Env {
+		fmt.Println(env.Name)
+		fmt.Println(env.Value)
+		//fmt.Println(env.ValueFrom.SecretKeyRef.)
+	}
+
 	currentJob := &batchv1.Job{}
 	err := r.Client.Get(context.TODO(), types.NamespacedName{Name: desiredJob.Name, Namespace: desiredJob.Namespace}, currentJob)
 	if err != nil {

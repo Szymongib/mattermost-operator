@@ -28,11 +28,14 @@ const (
 	// DefaultStorageSize is the default Storage size for the Database
 	DefaultStorageSize = "50Gi"
 
-	// ClusterLabel is the label applied across all compoments
-	ClusterLabel = "v1beta1.installation.mattermost.com/mattermost"
-	// ClusterResourceLabel is the label applied to a given ClusterInstallation
+	// TODO: we should consider updating label to something like "v1beta1.installation.mattermost.com/mattermost"
+	// but this may cause some issues on existing clusters
+	// ClusterLabel is the label applied across all components
+	ClusterLabel = "v1alpha1.mattermost.com/installation"
+
+	// ClusterResourceLabel is the label applied to a given Mattermost
 	// as well as all other resources created to support it.
-	ClusterResourceLabel = "v1alpha1.installation.mattermost.com/resource"
+	ClusterResourceLabel = "v1beta1.installation.mattermost.com/resource"
 
 	// MattermostAppContainerName is the name of the container which runs the
 	// Mattermost application
@@ -51,7 +54,7 @@ func (mm *Mattermost) SetDefaults() error {
 		mm.Spec.Version = DefaultMattermostVersion
 	}
 
-	mm.Spec.Filestore.SetDefaults()
+	mm.Spec.FileStore.SetDefaults()
 	mm.Spec.Database.SetDefaults()
 
 	return nil

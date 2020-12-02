@@ -13,7 +13,7 @@ import (
 func (r *MattermostReconciler) checkFileStore(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (*mattermostApp.FileStoreInfo, error) {
 	reqLogger = reqLogger.WithValues("Reconcile", "fileStore")
 
-	if mattermost.Spec.Filestore.IsExternal() {
+	if mattermost.Spec.FileStore.IsExternal() {
 		return r.checkExternalFileStore(mattermost, reqLogger)
 	}
 
@@ -22,7 +22,7 @@ func (r *MattermostReconciler) checkFileStore(mattermost *mattermostv1beta1.Matt
 
 func (r *MattermostReconciler) checkExternalFileStore(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (*mattermostApp.FileStoreInfo, error) {
 	secret := &corev1.Secret{}
-	err := r.Client.Get(context.TODO(), types.NamespacedName{Name: mattermost.Spec.Filestore.External.Secret, Namespace: mattermost.Namespace}, secret)
+	err := r.Client.Get(context.TODO(), types.NamespacedName{Name: mattermost.Spec.FileStore.External.Secret, Namespace: mattermost.Namespace}, secret)
 	if err != nil {
 		reqLogger.Error(err, "failed to check if external file store secret exists")
 		return nil, err
@@ -47,5 +47,5 @@ func (r *MattermostReconciler) checkOperatorManagedMinio(mattermost *mattermostv
 		return nil, errors.Wrap(err, "failed to get Minio URL")
 	}
 
-	return mattermostApp.NewOperatorManagedFileStoreInfo(mattermost, secret.Name, url)
+	return mattermostApp.NewOperatorManagedFileStoreInfo(mattermost, secret.Name, url), nil
 }

@@ -30,8 +30,8 @@ type MattermostSpec struct {
 	// Accepted values are: 100users, 1000users, 5000users, 10000users,
 	// and 250000users. If replicas and resource requests/limits are not
 	// specified, and Size is not provided the configuration for 5000users will
-	// be applied. Setting 'Replicas', 'Advanced.Resources', 'Filestore.Replicas',
-	// 'Filestore.Resource', 'Database.Replicas', or 'Database.Resources' will
+	// be applied. Setting 'Replicas', 'Advanced.Resources', 'FileStore.Replicas',
+	// 'FileStore.Resource', 'Database.Replicas', or 'Database.Resources' will
 	// override the values set by Size. Setting new Size will override previous
 	// values regardless if set by Size or manually.
 	// +optional
@@ -66,7 +66,7 @@ type MattermostSpec struct {
 	// Mattermost application pods.
 	// +optional
 	Volumes []v1.Volume `json:"volumes,omitempty"`
-	// Defines additional volumeMounts to add to mattermost application pods.
+	// Defines additional volumeMounts to add to Mattermost application pods.
 	// +optional
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
 
@@ -76,7 +76,7 @@ type MattermostSpec struct {
 
 	// External Services
 	Database      Database      `json:"database,omitempty"`
-	Filestore     Filestore     `json:"filestore,omitempty"`
+	FileStore     FileStore     `json:"fileStore,omitempty"`
 	ElasticSearch ElasticSearch `json:"elasticSearch,omitempty"`
 }
 
@@ -180,9 +180,8 @@ type OperatorManagedDatabase struct {
 	BackupRestoreSecretName string `json:"backupRestoreSecretName,omitempty"`
 }
 
-// TODO: rename to FileStore?
-// Filestore defines the file store configuration for Mattermost.
-type Filestore struct {
+// FileStore defines the file store configuration for Mattermost.
+type FileStore struct {
 	// Defines the configuration of an external file store.
 	// +optional
 	External        *ExternalFilestore    `json:"external,omitempty"`

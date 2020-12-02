@@ -7,7 +7,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-type MySQLDB struct {
+type MySQLDBConfig struct {
 	secretName string
 	rootPassword string
 	userName     string
@@ -15,7 +15,7 @@ type MySQLDB struct {
 	databaseName string
 }
 
-func NewMySQLDB(secret corev1.Secret) (*MySQLDB, error) {
+func NewMySQLDB(secret corev1.Secret) (*MySQLDBConfig, error) {
 	rootPassword := string(secret.Data["ROOT_PASSWORD"])
 	if rootPassword == "" {
 		return nil, fmt.Errorf("database root password shouldn't be empty")
@@ -33,7 +33,7 @@ func NewMySQLDB(secret corev1.Secret) (*MySQLDB, error) {
 		return nil, fmt.Errorf("database name shouldn't be empty")
 	}
 
-	return &MySQLDB{
+	return &MySQLDBConfig{
 		secretName: secret.Name,
 		rootPassword:     rootPassword,
 		userName: userName,
@@ -43,20 +43,10 @@ func NewMySQLDB(secret corev1.Secret) (*MySQLDB, error) {
 
 }
 
-func (m *MySQLDB) EnvVars(mattermost *mattermostv1beta1.Mattermost) []corev1.EnvVar {
+func (m *MySQLDBConfig) EnvVars(mattermost *mattermostv1beta1.Mattermost) []corev1.EnvVar {
 	mysqlName := utils.HashWithPrefix("db", mattermost.Name)
 
 	var dbEnvVars []corev1.EnvVar = []corev1.EnvVar{
-		{
-			Name: "MM_CONFIG",
-			Value: fmt.Sprintf(
-				"mysql://$(MYSQL_USERNAME):$(MYSQL_PASSWORD)@tcp(%s-mysql-master.%s:3306)/%s?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s",
-				mysqlName, mattermost.Namespace, m.databaseName,
-			),
-		},
-	}
-
-	mysqlOperatorEnv := []corev1.EnvVar{
 		{
 			Name: "MYSQL_USERNAME",
 			ValueFrom: &corev1.EnvVarSource{
@@ -86,14 +76,19 @@ func (m *MySQLDB) EnvVars(mattermost *mattermostv1beta1.Mattermost) []corev1.Env
 				mysqlName, mattermost.Namespace, m.databaseName,
 			),
 		},
+		{
+			Name: "MM_CONFIG",
+			Value: fmt.Sprintf(
+				"mysql://$(MYSQL_USERNAME):$(MYSQL_PASSWORD)@tcp(%s-mysql-master.%s:3306)/%s?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s",
+				mysqlName, mattermost.Namespace, m.databaseName,
+			),
+		},
 	}
-
-	dbEnvVars = append(dbEnvVars, mysqlOperatorEnv...)
 
 	return dbEnvVars
 }
 
-func (m *MySQLDB) InitContainers(mattermost *mattermostv1beta1.Mattermost) []corev1.Container {
+func (m *MySQLDBConfig) InitContainers(mattermost *mattermostv1beta1.Mattermost) []corev1.Container {
 	mysqlName := utils.HashWithPrefix("db", mattermost.Name)
 
 	return []corev1.Container{

@@ -450,7 +450,7 @@ func (mm *Mattermost) setDefaultReplicasAndResources() {
 		mm.Spec.Advanced.Resources = defaultSize.App.Resources
 	}
 
-	mm.Spec.Filestore.SetDefaultReplicasAndResources()
+	mm.Spec.FileStore.SetDefaultReplicasAndResources()
 	mm.Spec.Database.SetDefaultReplicasAndResources()
 }
 
@@ -459,6 +459,6 @@ func (mm *Mattermost) overrideReplicasAndResourcesFromSize(size MattermostSize) 
 
 	mm.Spec.Replicas = utils.NewInt32(size.App.Replicas)
 	mm.Spec.Advanced.Resources = size.App.Resources
-	mm.Spec.Filestore.OverrideReplicasAndResourcesFromSize(size)
+	mm.Spec.FileStore.OverrideReplicasAndResourcesFromSize(size)
 	mm.Spec.Database.OverrideReplicasAndResourcesFromSize(size)
 }

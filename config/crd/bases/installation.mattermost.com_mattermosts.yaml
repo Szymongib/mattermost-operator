@@ -1040,9 +1040,8 @@ spec:
                   username:
                     type: string
                 type: object
-              filestore:
-                description: 'TODO: rename to FileStore? Filestore defines the file
-                  store configuration for Mattermost.'
+              fileStore:
+                description: FileStore defines the file store configuration for Mattermost.
                 properties:
                   external:
                     description: Defines the configuration of an external file store.
@@ -1247,7 +1246,7 @@ spec:
                   10000users, and 250000users. If replicas and resource requests/limits
                   are not specified, and Size is not provided the configuration for
                   5000users will be applied. Setting ''Replicas'', ''Advanced.Resources'',
-                  ''Filestore.Replicas'', ''Filestore.Resource'', ''Database.Replicas'',
+                  ''FileStore.Replicas'', ''FileStore.Resource'', ''Database.Replicas'',
                   or ''Database.Resources'' will override the values set by Size.
                   Setting new Size will override previous values regardless if set
                   by Size or manually.'
@@ -1260,7 +1259,7 @@ spec:
                 description: Version defines the Mattermost Docker image version.
                 type: string
               volumeMounts:
-                description: Defines additional volumeMounts to add to mattermost
+                description: Defines additional volumeMounts to add to Mattermost
                   application pods.
                 items:
                   description: VolumeMount describes a mounting of a Volume within
