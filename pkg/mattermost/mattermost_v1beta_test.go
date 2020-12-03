@@ -386,7 +386,7 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 			assertEnvVarExists(t, "MM_INSTALL_TYPE", mattermostAppContainer.Env)
 
 			// External db check.
-			expectedInitContainers := 1
+			expectedInitContainers := 0 // Due to disabling DB setup job we start with 0 init containers
 
 			if externalDB, ok := tt.database.(*ExternalDBConfig); ok {
 				if externalDB.hasDBCheckURL {

@@ -181,12 +181,14 @@ func (r *MattermostReconciler) checkMattermostDeployment(
 		mattermost.GetImageName(),
 	)
 
-	err := r.checkMattermostDBSetupJob(mattermost, desired, reqLogger)
-	if err != nil {
-		return errors.Wrap(err, "failed to check mattermost DB setup job")
-	}
+	// TODO: DB setup job is temporarily disabled as `mattermost version` command
+	// does not account for the custom configuration
+	//err = r.checkMattermostDBSetupJob(mattermost, desired, reqLogger)
+	//if err != nil {
+	//	return errors.Wrap(err, "failed to check mattermost DB setup job")
+	//}
 
-	err = r.createDeploymentIfNotExists(mattermost, desired, reqLogger)
+	err := r.createDeploymentIfNotExists(mattermost, desired, reqLogger)
 	if err != nil {
 		return errors.Wrap(err, "failed to create mattermost deployment")
 	}
