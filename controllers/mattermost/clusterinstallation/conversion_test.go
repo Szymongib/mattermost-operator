@@ -10,10 +10,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"testing"
-	"k8s.io/client-go/kubernetes/scheme"
-
 )
 
 func TestConvertToMM(t *testing.T) {
@@ -38,7 +37,7 @@ func TestConvertToMM(t *testing.T) {
 		},
 	}
 
-	operatorDBSecret :=&corev1.Secret{
+	operatorDBSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Name: "operator-db-secret", Namespace: "test-namespace"},
 		Data: map[string][]byte{
 			"ROOT_PASSWORD": []byte("root"),
@@ -53,30 +52,30 @@ func TestConvertToMM(t *testing.T) {
 	err = c.Create(context.TODO(), operatorDBSecret)
 	require.NoError(t, err)
 
-	for _, testCase := range []struct{
-	    description string
-	    clusterInstallation mattermostv1alpha1.ClusterInstallation
-	    mattermost 			mattermostv1beta1.Mattermost
+	for _, testCase := range []struct {
+		description         string
+		clusterInstallation mattermostv1alpha1.ClusterInstallation
+		mattermost          mattermostv1beta1.Mattermost
 	}{
-	    {
+		{
 			description: "should convert default",
 			clusterInstallation: mattermostv1alpha1.ClusterInstallation{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "test1",
-					Namespace: "test-1-ns",
-					Labels: map[string]string{"key1": "val1"},
-					Annotations: map[string]string{"ann1":"ann_val1"},
+					Name:        "test1",
+					Namespace:   "test-1-ns",
+					Labels:      map[string]string{"key1": "val1"},
+					Annotations: map[string]string{"ann1": "ann_val1"},
 				},
-				Spec:       mattermostv1alpha1.ClusterInstallationSpec{},
+				Spec: mattermostv1alpha1.ClusterInstallationSpec{},
 			},
 			mattermost: mattermostv1beta1.Mattermost{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "test1",
-					Namespace: "test-1-ns",
-					Labels: map[string]string{"key1": "val1"},
-					Annotations: map[string]string{"ann1":"ann_val1"},
+					Name:        "test1",
+					Namespace:   "test-1-ns",
+					Labels:      map[string]string{"key1": "val1"},
+					Annotations: map[string]string{"ann1": "ann_val1"},
 				},
-				Spec:       mattermostv1beta1.MattermostSpec{
+				Spec: mattermostv1beta1.MattermostSpec{
 					Database: mattermostv1beta1.Database{
 						OperatorManaged: &mattermostv1beta1.OperatorManagedDatabase{},
 					},
@@ -86,11 +85,11 @@ func TestConvertToMM(t *testing.T) {
 				},
 			},
 		},
-	    {
+		{
 			description: "should convert operator managed settings",
 			clusterInstallation: mattermostv1alpha1.ClusterInstallation{
 				ObjectMeta: fixObjectMeta(),
-				Spec:       mattermostv1alpha1.ClusterInstallationSpec{
+				Spec: mattermostv1alpha1.ClusterInstallationSpec{
 					Database: mattermostv1alpha1.Database{
 						Type:                     "mysql",
 						StorageSize:              "200Gb",
@@ -112,7 +111,7 @@ func TestConvertToMM(t *testing.T) {
 			},
 			mattermost: mattermostv1beta1.Mattermost{
 				ObjectMeta: fixObjectMeta(),
-				Spec:       mattermostv1beta1.MattermostSpec{
+				Spec: mattermostv1beta1.MattermostSpec{
 					Database: mattermostv1beta1.Database{
 						OperatorManaged: &mattermostv1beta1.OperatorManagedDatabase{
 							Type:                     "mysql",
@@ -137,11 +136,11 @@ func TestConvertToMM(t *testing.T) {
 				},
 			},
 		},
-	    {
+		{
 			description: "should convert external file store",
 			clusterInstallation: mattermostv1alpha1.ClusterInstallation{
 				ObjectMeta: fixObjectMeta(),
-				Spec:       mattermostv1alpha1.ClusterInstallationSpec{
+				Spec: mattermostv1alpha1.ClusterInstallationSpec{
 					Minio: mattermostv1alpha1.Minio{
 						StorageSize:    "ignored",
 						Replicas:       100,
@@ -153,7 +152,7 @@ func TestConvertToMM(t *testing.T) {
 			},
 			mattermost: mattermostv1beta1.Mattermost{
 				ObjectMeta: fixObjectMeta(),
-				Spec:       mattermostv1beta1.MattermostSpec{
+				Spec: mattermostv1beta1.MattermostSpec{
 					Database: mattermostv1beta1.Database{
 						OperatorManaged: &mattermostv1beta1.OperatorManagedDatabase{},
 					},
@@ -167,17 +166,17 @@ func TestConvertToMM(t *testing.T) {
 				},
 			},
 		},
-	    {
+		{
 			description: "should convert external database",
 			clusterInstallation: mattermostv1alpha1.ClusterInstallation{
 				ObjectMeta: fixObjectMeta(),
-				Spec:       mattermostv1alpha1.ClusterInstallationSpec{
+				Spec: mattermostv1alpha1.ClusterInstallationSpec{
 					Database: mattermostv1alpha1.Database{Secret: "external-db-secret"},
 				},
 			},
 			mattermost: mattermostv1beta1.Mattermost{
 				ObjectMeta: fixObjectMeta(),
-				Spec:       mattermostv1beta1.MattermostSpec{
+				Spec: mattermostv1beta1.MattermostSpec{
 					Database: mattermostv1beta1.Database{
 						External: &mattermostv1beta1.ExternalDatabase{
 							Secret: "external-db-secret",
@@ -189,17 +188,17 @@ func TestConvertToMM(t *testing.T) {
 				},
 			},
 		},
-	    {
+		{
 			description: "should convert operator managed database from secret",
 			clusterInstallation: mattermostv1alpha1.ClusterInstallation{
 				ObjectMeta: fixObjectMeta(),
-				Spec:       mattermostv1alpha1.ClusterInstallationSpec{
+				Spec: mattermostv1alpha1.ClusterInstallationSpec{
 					Database: mattermostv1alpha1.Database{Secret: "operator-db-secret"},
 				},
 			},
 			mattermost: mattermostv1beta1.Mattermost{
 				ObjectMeta: fixObjectMeta(),
-				Spec:       mattermostv1beta1.MattermostSpec{
+				Spec: mattermostv1beta1.MattermostSpec{
 					Database: mattermostv1beta1.Database{
 						OperatorManaged: &mattermostv1beta1.OperatorManagedDatabase{},
 					},
@@ -209,11 +208,11 @@ func TestConvertToMM(t *testing.T) {
 				},
 			},
 		},
-	    {
+		{
 			description: "should convert other fields",
 			clusterInstallation: mattermostv1alpha1.ClusterInstallation{
 				ObjectMeta: fixObjectMeta(),
-				Spec:       mattermostv1alpha1.ClusterInstallationSpec{
+				Spec: mattermostv1alpha1.ClusterInstallationSpec{
 					Image:                   "image",
 					Version:                 "ver",
 					Size:                    "10000size",
@@ -221,48 +220,48 @@ func TestConvertToMM(t *testing.T) {
 					Resources:               fixResources("100m", "100Mi"),
 					IngressName:             "ingress",
 					MattermostLicenseSecret: "license-secret",
-					NodeSelector:            map[string]string{"node":"choose-me"},
+					NodeSelector:            map[string]string{"node": "choose-me"},
 					Affinity:                &corev1.Affinity{NodeAffinity: &corev1.NodeAffinity{}},
-					ElasticSearch:           mattermostv1alpha1.ElasticSearch{
+					ElasticSearch: mattermostv1alpha1.ElasticSearch{
 						Host:     "http://es",
 						UserName: "es-user",
 						Password: "es-pass",
 					},
-					UseServiceLoadBalancer:  true,
-					ServiceAnnotations: map[string]string{"ann1":"val1"},
-					UseIngressTLS:           true,
-					ResourceLabels: map[string]string{"resource":"this-one"},
-					IngressAnnotations: map[string]string{"ingress":"this-one"},
-					MattermostEnv:           []corev1.EnvVar{
+					UseServiceLoadBalancer: true,
+					ServiceAnnotations:     map[string]string{"ann1": "val1"},
+					UseIngressTLS:          true,
+					ResourceLabels:         map[string]string{"resource": "this-one"},
+					IngressAnnotations:     map[string]string{"ingress": "this-one"},
+					MattermostEnv: []corev1.EnvVar{
 						{
-							Name:      "test_env",
-							Value:     "env val",
+							Name:  "test_env",
+							Value: "env val",
 						},
 					},
-					LivenessProbe:           corev1.Probe{InitialDelaySeconds: 10},
-					ReadinessProbe:          corev1.Probe{SuccessThreshold: 20},
+					LivenessProbe:  corev1.Probe{InitialDelaySeconds: 10},
+					ReadinessProbe: corev1.Probe{SuccessThreshold: 20},
 				},
 			},
 			mattermost: mattermostv1beta1.Mattermost{
 				ObjectMeta: fixObjectMeta(),
-				Spec:       mattermostv1beta1.MattermostSpec{
-					Size:                   "10000size",
-					Image:                  "image",
-					Version:                "ver",
-					Replicas:               nil,
-					MattermostEnv:          []corev1.EnvVar{
+				Spec: mattermostv1beta1.MattermostSpec{
+					Size:     "10000size",
+					Image:    "image",
+					Version:  "ver",
+					Replicas: nil,
+					MattermostEnv: []corev1.EnvVar{
 						{
-							Name:      "test_env",
-							Value:     "env val",
+							Name:  "test_env",
+							Value: "env val",
 						},
 					},
 					LicenseSecret:          "license-secret",
 					IngressName:            "ingress",
-					UseServiceLoadBalancer:  true,
-					ServiceAnnotations: map[string]string{"ann1":"val1"},
-					UseIngressTLS:           true,
-					ResourceLabels: map[string]string{"resource":"this-one"},
-					IngressAnnotations: map[string]string{"ingress":"this-one"},
+					UseServiceLoadBalancer: true,
+					ServiceAnnotations:     map[string]string{"ann1": "val1"},
+					UseIngressTLS:          true,
+					ResourceLabels:         map[string]string{"resource": "this-one"},
+					IngressAnnotations:     map[string]string{"ingress": "this-one"},
 					Database: mattermostv1beta1.Database{
 						OperatorManaged: &mattermostv1beta1.OperatorManagedDatabase{},
 					},
@@ -274,14 +273,14 @@ func TestConvertToMM(t *testing.T) {
 						UserName: "es-user",
 						Password: "es-pass",
 					},
-					Scheduling:    mattermostv1beta1.Scheduling{
-						NodeSelector: map[string]string{"node":"choose-me"},
+					Scheduling: mattermostv1beta1.Scheduling{
+						NodeSelector: map[string]string{"node": "choose-me"},
 						Affinity:     &corev1.Affinity{NodeAffinity: &corev1.NodeAffinity{}},
 						Resources:    fixResources("100m", "100Mi"),
 					},
-					Probes:        mattermostv1beta1.Probes{
-						LivenessProbe:           corev1.Probe{InitialDelaySeconds: 10},
-						ReadinessProbe:          corev1.Probe{SuccessThreshold: 20},
+					Probes: mattermostv1beta1.Probes{
+						LivenessProbe:  corev1.Probe{InitialDelaySeconds: 10},
+						ReadinessProbe: corev1.Probe{SuccessThreshold: 20},
 					},
 				},
 			},
@@ -290,13 +289,13 @@ func TestConvertToMM(t *testing.T) {
 			description: "should set replicas to 0 if negative",
 			clusterInstallation: mattermostv1alpha1.ClusterInstallation{
 				ObjectMeta: fixObjectMeta(),
-				Spec:       mattermostv1alpha1.ClusterInstallationSpec{
+				Spec: mattermostv1alpha1.ClusterInstallationSpec{
 					Replicas: -1,
 				},
 			},
 			mattermost: mattermostv1beta1.Mattermost{
 				ObjectMeta: fixObjectMeta(),
-				Spec:       mattermostv1beta1.MattermostSpec{
+				Spec: mattermostv1beta1.MattermostSpec{
 					Database: mattermostv1beta1.Database{
 						OperatorManaged: &mattermostv1beta1.OperatorManagedDatabase{},
 					},
@@ -308,18 +307,18 @@ func TestConvertToMM(t *testing.T) {
 			},
 		},
 	} {
-	    t.Run(testCase.description, func(t *testing.T) {
+		t.Run(testCase.description, func(t *testing.T) {
 			mm, err := reconciler.ConvertToMM(&testCase.clusterInstallation)
 			require.NoError(t, err)
 
 			assert.Equal(t, &testCase.mattermost, mm)
-	    })
+		})
 	}
 
 	t.Run("should return error if secret not found", func(t *testing.T) {
 		ci := mattermostv1alpha1.ClusterInstallation{
 			ObjectMeta: fixObjectMeta(),
-			Spec:       mattermostv1alpha1.ClusterInstallationSpec{
+			Spec: mattermostv1alpha1.ClusterInstallationSpec{
 				Database: mattermostv1alpha1.Database{Secret: "invalid-secret"},
 			},
 		}
@@ -329,7 +328,7 @@ func TestConvertToMM(t *testing.T) {
 	})
 
 	t.Run("should return error if secret is invalid", func(t *testing.T) {
-		invalidDBSecret :=&corev1.Secret{
+		invalidDBSecret := &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{Name: "invalid-db-secret", Namespace: "test-namespace"},
 			Data: map[string][]byte{
 				"ROOT_PASSWORD": []byte("root"),
@@ -341,7 +340,7 @@ func TestConvertToMM(t *testing.T) {
 
 		ci := mattermostv1alpha1.ClusterInstallation{
 			ObjectMeta: fixObjectMeta(),
-			Spec:       mattermostv1alpha1.ClusterInstallationSpec{
+			Spec: mattermostv1alpha1.ClusterInstallationSpec{
 				Database: mattermostv1alpha1.Database{Secret: "invalid-db-secret"},
 			},
 		}
@@ -353,7 +352,7 @@ func TestConvertToMM(t *testing.T) {
 
 func fixObjectMeta() metav1.ObjectMeta {
 	return metav1.ObjectMeta{
-		Name: "test-name",
+		Name:      "test-name",
 		Namespace: "test-namespace",
 	}
 }
@@ -361,11 +360,11 @@ func fixObjectMeta() metav1.ObjectMeta {
 func fixResources(cpu, mem string) corev1.ResourceRequirements {
 	return corev1.ResourceRequirements{
 		Requests: corev1.ResourceList{
-			"cpu": resource.MustParse(cpu),
+			"cpu":    resource.MustParse(cpu),
 			"memory": resource.MustParse(mem),
 		},
 		Limits: corev1.ResourceList{
-			"cpu": resource.MustParse(cpu),
+			"cpu":    resource.MustParse(cpu),
 			"memory": resource.MustParse(mem),
 		},
 	}

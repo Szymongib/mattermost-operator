@@ -13,7 +13,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // Instance returns the Minio component to deploy
@@ -25,48 +24,20 @@ func Instance(mattermost *mattermostv1alpha1.ClusterInstallation) *minioOperator
 		minioName = mattermost.Spec.Minio.Secret
 	}
 
-	return &minioOperator.MinIOInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      minioName,
-			Namespace: mattermost.Namespace,
-			Labels:    mattermostv1alpha1.ClusterInstallationResourceLabels(mattermost.Name),
-			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(mattermost, schema.GroupVersionKind{
-					Group:   mattermostv1alpha1.GroupVersion.Group,
-					Version: mattermostv1alpha1.GroupVersion.Version,
-					Kind:    "ClusterInstallation",
-				}),
-			},
-		},
-		Spec: minioOperator.MinIOInstanceSpec{
-			Replicas:    mattermost.Spec.Minio.Replicas,
-			Mountpath:   "/export",
-			CredsSecret: &corev1.LocalObjectReference{Name: minioName},
-			VolumeClaimTemplate: &corev1.PersistentVolumeClaim{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: minioName,
-				},
-				Spec: corev1.PersistentVolumeClaimSpec{
-					AccessModes: []corev1.PersistentVolumeAccessMode{
-						"ReadWriteOnce",
-					},
-					Resources: corev1.ResourceRequirements{
-						Requests: corev1.ResourceList{
-							corev1.ResourceStorage: resource.MustParse(mattermost.Spec.Minio.StorageSize),
-						},
-					},
-				},
-			},
-		},
-	}
+	return newMinioInstance(
+		minioName,
+		mattermost.Namespace,
+		mattermostv1alpha1.ClusterInstallationResourceLabels(mattermost.Name),
+		mattermostApp.ClusterInstallationOwnerReference(mattermost),
+		mattermost.Spec.Minio.Replicas,
+		mattermost.Spec.Minio.StorageSize,
+	)
 }
 
 // Secret returns the secret name created to use togehter with Minio deployment
 func Secret(mattermost *mattermostv1alpha1.ClusterInstallation) *corev1.Secret {
 	secretName := DefaultMinioSecretName(mattermost.Name)
-	data := make(map[string][]byte)
-	data["accesskey"] = utils.New16ID()
-	data["secretkey"] = utils.New28ID()
+	data := minioSecretData()
 
 	return mattermostApp.GenerateSecret(
 		mattermost,
@@ -80,42 +51,20 @@ func Secret(mattermost *mattermostv1alpha1.ClusterInstallation) *corev1.Secret {
 func InstanceV1Beta(mattermost *mattermostv1beta1.Mattermost) *minioOperator.MinIOInstance {
 	minioName := fmt.Sprintf("%s-minio", mattermost.Name)
 
-	return &minioOperator.MinIOInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:            minioName,
-			Namespace:       mattermost.Namespace,
-			Labels:          mattermostv1alpha1.ClusterInstallationResourceLabels(mattermost.Name),
-			OwnerReferences: mattermostApp.MattermostOwnerReference(mattermost),
-		},
-		Spec: minioOperator.MinIOInstanceSpec{
-			Replicas:    *mattermost.Spec.FileStore.OperatorManaged.Replicas,
-			Mountpath:   "/export",
-			CredsSecret: &corev1.LocalObjectReference{Name: minioName},
-			VolumeClaimTemplate: &corev1.PersistentVolumeClaim{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: minioName,
-				},
-				Spec: corev1.PersistentVolumeClaimSpec{
-					AccessModes: []corev1.PersistentVolumeAccessMode{
-						"ReadWriteOnce",
-					},
-					Resources: corev1.ResourceRequirements{
-						Requests: corev1.ResourceList{
-							corev1.ResourceStorage: resource.MustParse(mattermost.Spec.FileStore.OperatorManaged.StorageSize),
-						},
-					},
-				},
-			},
-		},
-	}
+	return newMinioInstance(
+		minioName,
+		mattermost.Namespace,
+		mattermostv1beta1.MattermostResourceLabels(mattermost.Name),
+		mattermostApp.MattermostOwnerReference(mattermost),
+		*mattermost.Spec.FileStore.OperatorManaged.Replicas,
+		mattermost.Spec.FileStore.OperatorManaged.StorageSize,
+	)
 }
 
-// Secret returns the secret name created to use togehter with Minio deployment
+// Secret returns the secret name created to use together with Minio deployment
 func SecretV1Beta(mattermost *mattermostv1beta1.Mattermost) *corev1.Secret {
 	secretName := DefaultMinioSecretName(mattermost.Name)
-	data := make(map[string][]byte)
-	data["accesskey"] = utils.New16ID()
-	data["secretkey"] = utils.New28ID()
+	data := minioSecretData()
 
 	return mattermostApp.GenerateSecretV1Beta(
 		mattermost,
@@ -129,4 +78,49 @@ func SecretV1Beta(mattermost *mattermostv1beta1.Mattermost) *corev1.Secret {
 // the provided installation name.
 func DefaultMinioSecretName(installationName string) string {
 	return fmt.Sprintf("%s-minio", installationName)
+}
+
+func newMinioInstance(
+	name string,
+	namespace string,
+	labels map[string]string,
+	ownerRefs []metav1.OwnerReference,
+	replicas int32,
+	storageSize string,
+) *minioOperator.MinIOInstance {
+	return &minioOperator.MinIOInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            name,
+			Namespace:       namespace,
+			Labels:          labels,
+			OwnerReferences: ownerRefs,
+		},
+		Spec: minioOperator.MinIOInstanceSpec{
+			Replicas:    replicas,
+			Mountpath:   "/export",
+			CredsSecret: &corev1.LocalObjectReference{Name: name},
+			VolumeClaimTemplate: &corev1.PersistentVolumeClaim{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: name,
+				},
+				Spec: corev1.PersistentVolumeClaimSpec{
+					AccessModes: []corev1.PersistentVolumeAccessMode{
+						"ReadWriteOnce",
+					},
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceStorage: resource.MustParse(storageSize),
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func minioSecretData() map[string][]byte {
+	data := make(map[string][]byte, 2)
+	data["accesskey"] = utils.New16ID()
+	data["secretkey"] = utils.New28ID()
+	return data
 }

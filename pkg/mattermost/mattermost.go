@@ -321,80 +321,19 @@ func GenerateDeployment(mattermost *mattermostv1alpha1.ClusterInstallation, dbIn
 	// ES section vars
 	envVarES := []corev1.EnvVar{}
 	if mattermost.Spec.ElasticSearch.Host != "" {
-		envVarES = []corev1.EnvVar{
-			{
-				Name:  "MM_ELASTICSEARCHSETTINGS_ENABLEINDEXING",
-				Value: "true",
-			},
-			{
-				Name:  "MM_ELASTICSEARCHSETTINGS_ENABLESEARCHING",
-				Value: "true",
-			},
-			{
-				Name:  "MM_ELASTICSEARCHSETTINGS_CONNECTIONURL",
-				Value: mattermost.Spec.ElasticSearch.Host,
-			},
-			{
-				Name:  "MM_ELASTICSEARCHSETTINGS_USERNAME",
-				Value: mattermost.Spec.ElasticSearch.UserName,
-			},
-			{
-				Name:  "MM_ELASTICSEARCHSETTINGS_PASSWORD",
-				Value: mattermost.Spec.ElasticSearch.Password,
-			},
-		}
+		envVarES = elasticSearchEnvVars(
+			mattermost.Spec.ElasticSearch.Host,
+			mattermost.Spec.ElasticSearch.UserName,
+			mattermost.Spec.ElasticSearch.Password,
+		)
 	}
 
 	siteURL := fmt.Sprintf("https://%s", ingressName)
-	envVarGeneral := []corev1.EnvVar{
-		{
-			Name:  "MM_SERVICESETTINGS_SITEURL",
-			Value: siteURL,
-		},
-		{
-			Name:  "MM_PLUGINSETTINGS_ENABLEUPLOADS",
-			Value: "true",
-		},
-		{
-			Name:  "MM_METRICSSETTINGS_ENABLE",
-			Value: "true",
-		},
-		{
-			Name:  "MM_METRICSSETTINGS_LISTENADDRESS",
-			Value: ":8067",
-		},
-		{
-			Name:  "MM_CLUSTERSETTINGS_ENABLE",
-			Value: "true",
-		},
-		{
-			Name:  "MM_CLUSTERSETTINGS_CLUSTERNAME",
-			Value: "production",
-		},
-		{
-			Name:  "MM_INSTALL_TYPE",
-			Value: "kubernetes-operator",
-		},
-	}
+	envVarGeneral := generalMattermostEnvVars(siteURL)
 
 	valueSize := strconv.Itoa(defaultMaxFileSize * sizeMB)
 	if !mattermost.Spec.UseServiceLoadBalancer {
-		if _, ok := mattermost.Spec.IngressAnnotations["nginx.ingress.kubernetes.io/proxy-body-size"]; ok {
-			size := mattermost.Spec.IngressAnnotations["nginx.ingress.kubernetes.io/proxy-body-size"]
-			if strings.HasSuffix(size, "M") {
-				maxFileSize, _ := strconv.Atoi(strings.TrimSuffix(size, "M"))
-				valueSize = strconv.Itoa(maxFileSize * sizeMB)
-			} else if strings.HasSuffix(size, "m") {
-				maxFileSize, _ := strconv.Atoi(strings.TrimSuffix(size, "m"))
-				valueSize = strconv.Itoa(maxFileSize * sizeMB)
-			} else if strings.HasSuffix(size, "G") {
-				maxFileSize, _ := strconv.Atoi(strings.TrimSuffix(size, "G"))
-				valueSize = strconv.Itoa(maxFileSize * sizeGB)
-			} else if strings.HasSuffix(size, "g") {
-				maxFileSize, _ := strconv.Atoi(strings.TrimSuffix(size, "g"))
-				valueSize = strconv.Itoa(maxFileSize * sizeGB)
-			}
-		}
+		valueSize = determineMaxBodySize(mattermost.Spec.IngressAnnotations, valueSize)
 	}
 	envVarGeneral = append(envVarGeneral, corev1.EnvVar{
 		Name:  "MM_FILESETTINGS_MAXFILESIZE",
@@ -406,31 +345,11 @@ func GenerateDeployment(mattermost *mattermostv1alpha1.ClusterInstallation, dbIn
 	volumeMountLicense := []corev1.VolumeMount{}
 	podAnnotations := map[string]string{}
 	if len(mattermost.Spec.MattermostLicenseSecret) != 0 {
-		envVarGeneral = append(envVarGeneral, corev1.EnvVar{
-			Name:  "MM_SERVICESETTINGS_LICENSEFILELOCATION",
-			Value: "/mattermost-license/license",
-		})
-
-		volumeMountLicense = append(volumeMountLicense, corev1.VolumeMount{
-			MountPath: "/mattermost-license",
-			Name:      "mattermost-license",
-			ReadOnly:  true,
-		})
-
-		volumeLicense = append(volumeLicense, corev1.Volume{
-			Name: "mattermost-license",
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					SecretName: mattermost.Spec.MattermostLicenseSecret,
-				},
-			},
-		})
-
-		podAnnotations = map[string]string{
-			"prometheus.io/scrape": "true",
-			"prometheus.io/path":   "/metrics",
-			"prometheus.io/port":   "8067",
-		}
+		env, vMount, volume, annotations := mattermostLicenceConfig(mattermost.Spec.MattermostLicenseSecret)
+		envVarGeneral = append(envVarGeneral, env)
+		volumeMountLicense = append(volumeMountLicense, vMount)
+		volumeLicense = append(volumeLicense, volume)
+		podAnnotations = annotations
 	}
 
 	// EnvVars Section
@@ -559,14 +478,7 @@ func GenerateRole(mattermost *mattermostv1alpha1.ClusterInstallation, roleName s
 			Namespace:       mattermost.Namespace,
 			OwnerReferences: ClusterInstallationOwnerReference(mattermost),
 		},
-		Rules: []rbacv1.PolicyRule{
-			{
-				Verbs:         []string{"get", "list", "watch"},
-				APIGroups:     []string{"batch"},
-				Resources:     []string{"jobs"},
-				ResourceNames: []string{SetupJobName},
-			},
-		},
+		Rules: mattermostRolePermissions(),
 	}
 }
 

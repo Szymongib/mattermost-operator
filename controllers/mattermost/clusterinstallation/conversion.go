@@ -17,12 +17,12 @@ import (
 func (r *ClusterInstallationReconciler) ConvertToMM(ci *mattermostv1alpha1.ClusterInstallation) (*mattermostv1beta1.Mattermost, error) {
 	mattermost := &mattermostv1beta1.Mattermost{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: ci.Name,
-			Namespace: ci.Namespace,
-			Labels: ci.Labels,
+			Name:        ci.Name,
+			Namespace:   ci.Namespace,
+			Labels:      ci.Labels,
 			Annotations: ci.Annotations,
 		},
-		Spec:       mattermostv1beta1.MattermostSpec{
+		Spec: mattermostv1beta1.MattermostSpec{
 			Size:                   ci.Spec.Size,
 			Image:                  ci.Spec.Image,
 			Version:                ci.Spec.Version,
@@ -52,7 +52,7 @@ func (r *ClusterInstallationReconciler) ConvertToMM(ci *mattermostv1alpha1.Clust
 	return mattermost, nil
 }
 
-func convertFileStore(ci *mattermostv1alpha1.ClusterInstallation) (mattermostv1beta1.FileStore) {
+func convertFileStore(ci *mattermostv1alpha1.ClusterInstallation) mattermostv1beta1.FileStore {
 	if !ci.Spec.Minio.IsExternal() {
 		return convertToOperatorManagedMinio(ci)
 	}
@@ -101,7 +101,7 @@ func (r *ClusterInstallationReconciler) convertDatabase(ci *mattermostv1alpha1.C
 	}
 
 	return mattermostv1beta1.Database{
-		External:        &mattermostv1beta1.ExternalDatabase{
+		External: &mattermostv1beta1.ExternalDatabase{
 			Secret: ci.Spec.Database.Secret,
 		},
 	}, nil

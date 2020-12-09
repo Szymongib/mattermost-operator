@@ -46,7 +46,7 @@ func NewMySQLDB(secret corev1.Secret) (*MySQLDBConfig, error) {
 func (m *MySQLDBConfig) EnvVars(mattermost *mattermostv1beta1.Mattermost) []corev1.EnvVar {
 	mysqlName := utils.HashWithPrefix("db", mattermost.Name)
 
-	var dbEnvVars []corev1.EnvVar = []corev1.EnvVar{
+	dbEnvVars := []corev1.EnvVar{
 		{
 			Name: "MYSQL_USERNAME",
 			ValueFrom: &corev1.EnvVarSource{
@@ -92,7 +92,7 @@ func (m *MySQLDBConfig) InitContainers(mattermost *mattermostv1beta1.Mattermost)
 	mysqlName := utils.HashWithPrefix("db", mattermost.Name)
 
 	return []corev1.Container{
-		corev1.Container{
+		{
 			Name:            "init-check-operator-mysql",
 			Image:           "appropriate/curl:latest",
 			ImagePullPolicy: corev1.PullIfNotPresent,

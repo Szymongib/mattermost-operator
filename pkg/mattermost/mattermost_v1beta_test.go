@@ -103,11 +103,12 @@ func TestGenerateIngress_V1Beta(t *testing.T) {
 
 func TestGenerateDeployment_V1Beta(t *testing.T) {
 	tests := []struct {
-		name      string
-		spec      mattermostv1beta1.MattermostSpec
-		database  DatabaseConfig
-		fileStore *FileStoreInfo
-		want      *appsv1.Deployment
+		name        string
+		spec        mattermostv1beta1.MattermostSpec
+		database    DatabaseConfig
+		fileStore   *FileStoreInfo
+		want        *appsv1.Deployment
+		requiredEnv []string
 	}{
 		{
 			name: "has license",
@@ -132,6 +133,7 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 					},
 				},
 			},
+			requiredEnv: []string{"MM_SERVICESETTINGS_LICENSEFILELOCATION"},
 		},
 		{
 			name:     "external database",
@@ -140,10 +142,11 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 			want:     &appsv1.Deployment{},
 		},
 		{
-			name:     "external database with reader endpoints",
-			spec:     mattermostv1beta1.MattermostSpec{},
-			database: &ExternalDBConfig{secretName: "database-secret", hasReaderEndpoints: true},
-			want:     &appsv1.Deployment{},
+			name:        "external database with reader endpoints",
+			spec:        mattermostv1beta1.MattermostSpec{},
+			database:    &ExternalDBConfig{secretName: "database-secret", hasReaderEndpoints: true},
+			want:        &appsv1.Deployment{},
+			requiredEnv: []string{"MM_SQLSETTINGS_DATASOURCEREPLICAS"},
 		},
 		{
 			name: "external known database with check url",
@@ -346,6 +349,24 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "elastic search",
+			spec: mattermostv1beta1.MattermostSpec{
+				ElasticSearch: mattermostv1beta1.ElasticSearch{
+					Host:     "http://elastic",
+					UserName: "user",
+					Password: "password",
+				},
+			},
+			want: &appsv1.Deployment{},
+			requiredEnv: []string{
+				"MM_ELASTICSEARCHSETTINGS_ENABLEINDEXING",
+				"MM_ELASTICSEARCHSETTINGS_ENABLESEARCHING",
+				"MM_ELASTICSEARCHSETTINGS_CONNECTIONURL",
+				"MM_ELASTICSEARCHSETTINGS_USERNAME",
+				"MM_ELASTICSEARCHSETTINGS_PASSWORD",
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -384,6 +405,10 @@ func TestGenerateDeployment_V1Beta(t *testing.T) {
 			assertEnvVarExists(t, "MM_CLUSTERSETTINGS_CLUSTERNAME", mattermostAppContainer.Env)
 			assertEnvVarExists(t, "MM_FILESETTINGS_MAXFILESIZE", mattermostAppContainer.Env)
 			assertEnvVarExists(t, "MM_INSTALL_TYPE", mattermostAppContainer.Env)
+
+			for _, env := range tt.requiredEnv {
+				assertEnvVarExists(t, env, mattermostAppContainer.Env)
+			}
 
 			// External db check.
 			expectedInitContainers := 0 // Due to disabling DB setup job we start with 0 init containers
@@ -445,16 +470,6 @@ func TestGenerateRBACResources_V1Beta(t *testing.T) {
 	require.Equal(t, saName, roleBinding.Subjects[0].Name)
 	require.Equal(t, roleName, roleBinding.RoleRef.Name)
 }
-
-//func assertEnvVarExists(t *testing.T, name string, env []corev1.EnvVar) {
-//	for _, e := range env {
-//		if e.Name == name {
-//			return
-//		}
-//	}
-//
-//	assert.Fail(t, fmt.Sprintf("failed to find env var %s", name))
-//}
 
 func fixVolume() corev1.Volume {
 	return corev1.Volume{

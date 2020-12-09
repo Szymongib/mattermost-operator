@@ -3,6 +3,7 @@ package mattermost
 import (
 	"fmt"
 	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
+	pkgUtils "github.com/mattermost/mattermost-operator/pkg/utils"
 	"strconv"
 	"strings"
 
@@ -17,11 +18,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
-
-//const (
-//	SetupJobName                = "mattermost-db-setup"
-//	WaitForDBSetupContainerName = "init-wait-for-db-setup"
-//)
 
 type DatabaseConfig interface {
 	EnvVars(mattermost *mattermostv1beta1.Mattermost) []corev1.EnvVar
@@ -128,177 +124,55 @@ func GenerateIngressV1Beta(mattermost *mattermostv1beta1.Mattermost, name, ingre
 
 // GenerateDeployment returns the deployment for Mattermost app.
 func GenerateDeploymentV1Beta(mattermost *mattermostv1beta1.Mattermost, db DatabaseConfig, fileStore *FileStoreInfo, deploymentName, ingressName, serviceAccountName, containerImage string) *appsv1.Deployment {
+	// DB
 	envVarDB := db.EnvVars(mattermost)
 	initContainers := db.InitContainers(mattermost)
 
+	// File Store
+	envVarFileStore := fileStoreEnvVars(fileStore)
 	initContainers = append(initContainers, fileStore.config.InitContainers(mattermost)...)
-
-	minioAccessEnv := &corev1.EnvVarSource{
-		SecretKeyRef: &corev1.SecretKeySelector{
-			LocalObjectReference: corev1.LocalObjectReference{
-				Name: fileStore.secretName,
-			},
-			Key: "accesskey",
-		},
-	}
-
-	minioSecretEnv := &corev1.EnvVarSource{
-		SecretKeyRef: &corev1.SecretKeySelector{
-			LocalObjectReference: corev1.LocalObjectReference{
-				Name: fileStore.secretName,
-			},
-			Key: "secretkey",
-		},
-	}
-
-	// Generate FileStore config
-	envVarFileStore := []corev1.EnvVar{
-		{
-			Name:  "MM_FILESETTINGS_DRIVERNAME",
-			Value: "amazons3",
-		},
-		{
-			Name:      "MM_FILESETTINGS_AMAZONS3ACCESSKEYID",
-			ValueFrom: minioAccessEnv,
-		},
-		{
-			Name:      "MM_FILESETTINGS_AMAZONS3SECRETACCESSKEY",
-			ValueFrom: minioSecretEnv,
-		},
-		{
-			Name:  "MM_FILESETTINGS_AMAZONS3BUCKET",
-			Value: fileStore.bucketName,
-		},
-		{
-			Name:  "MM_FILESETTINGS_AMAZONS3ENDPOINT",
-			Value: fileStore.url,
-		},
-		{
-			Name:  "MM_FILESETTINGS_AMAZONS3SSL",
-			Value: "false",
-		},
-	}
 
 	// TODO: DB setup job is temporarily disabled as `mattermost version` command
 	// does not account for the custom configuration
 	// Add init container to wait for DB setup job to complete
 	//initContainers = append(initContainers, waitForSetupJobContainer())
 
-
 	// ES section vars
 	envVarES := []corev1.EnvVar{}
 	if mattermost.Spec.ElasticSearch.Host != "" {
-		envVarES = []corev1.EnvVar{
-			{
-				Name:  "MM_ELASTICSEARCHSETTINGS_ENABLEINDEXING",
-				Value: "true",
-			},
-			{
-				Name:  "MM_ELASTICSEARCHSETTINGS_ENABLESEARCHING",
-				Value: "true",
-			},
-			{
-				Name:  "MM_ELASTICSEARCHSETTINGS_CONNECTIONURL",
-				Value: mattermost.Spec.ElasticSearch.Host,
-			},
-			{
-				Name:  "MM_ELASTICSEARCHSETTINGS_USERNAME",
-				Value: mattermost.Spec.ElasticSearch.UserName,
-			},
-			{
-				Name:  "MM_ELASTICSEARCHSETTINGS_PASSWORD",
-				Value: mattermost.Spec.ElasticSearch.Password,
-			},
-		}
+		envVarES = elasticSearchEnvVars(
+			mattermost.Spec.ElasticSearch.Host,
+			mattermost.Spec.ElasticSearch.UserName,
+			mattermost.Spec.ElasticSearch.Password,
+		)
 	}
 
+	// General settings
 	siteURL := fmt.Sprintf("https://%s", ingressName)
-	envVarGeneral := []corev1.EnvVar{
-		{
-			Name:  "MM_SERVICESETTINGS_SITEURL",
-			Value: siteURL,
-		},
-		{
-			Name:  "MM_PLUGINSETTINGS_ENABLEUPLOADS",
-			Value: "true",
-		},
-		{
-			Name:  "MM_METRICSSETTINGS_ENABLE",
-			Value: "true",
-		},
-		{
-			Name:  "MM_METRICSSETTINGS_LISTENADDRESS",
-			Value: ":8067",
-		},
-		{
-			Name:  "MM_CLUSTERSETTINGS_ENABLE",
-			Value: "true",
-		},
-		{
-			Name:  "MM_CLUSTERSETTINGS_CLUSTERNAME",
-			Value: "production",
-		},
-		{
-			Name:  "MM_INSTALL_TYPE",
-			Value: "kubernetes-operator",
-		},
-	}
+	envVarGeneral := generalMattermostEnvVars(siteURL)
 
-	valueSize := strconv.Itoa(defaultMaxFileSize * sizeMB)
+	// Determine max file size
+	bodySize := strconv.Itoa(defaultMaxFileSize * sizeMB)
 	if !mattermost.Spec.UseServiceLoadBalancer {
-		if _, ok := mattermost.Spec.IngressAnnotations["nginx.ingress.kubernetes.io/proxy-body-size"]; ok {
-			size := mattermost.Spec.IngressAnnotations["nginx.ingress.kubernetes.io/proxy-body-size"]
-			if strings.HasSuffix(size, "M") {
-				maxFileSize, _ := strconv.Atoi(strings.TrimSuffix(size, "M"))
-				valueSize = strconv.Itoa(maxFileSize * sizeMB)
-			} else if strings.HasSuffix(size, "m") {
-				maxFileSize, _ := strconv.Atoi(strings.TrimSuffix(size, "m"))
-				valueSize = strconv.Itoa(maxFileSize * sizeMB)
-			} else if strings.HasSuffix(size, "G") {
-				maxFileSize, _ := strconv.Atoi(strings.TrimSuffix(size, "G"))
-				valueSize = strconv.Itoa(maxFileSize * sizeGB)
-			} else if strings.HasSuffix(size, "g") {
-				maxFileSize, _ := strconv.Atoi(strings.TrimSuffix(size, "g"))
-				valueSize = strconv.Itoa(maxFileSize * sizeGB)
-			}
-		}
+		bodySize = determineMaxBodySize(mattermost.Spec.IngressAnnotations, bodySize)
 	}
 	envVarGeneral = append(envVarGeneral, corev1.EnvVar{
 		Name:  "MM_FILESETTINGS_MAXFILESIZE",
-		Value: valueSize,
+		Value: bodySize,
 	})
 
+	// Prepare volumes
 	volumes := mattermost.Spec.Volumes
 	volumeMounts := mattermost.Spec.VolumeMounts
 	podAnnotations := map[string]string{}
 
 	// Mattermost License
 	if len(mattermost.Spec.LicenseSecret) != 0 {
-		envVarGeneral = append(envVarGeneral, corev1.EnvVar{
-			Name:  "MM_SERVICESETTINGS_LICENSEFILELOCATION",
-			Value: "/mattermost-license/license",
-		})
-
-		volumeMounts = append(volumeMounts, corev1.VolumeMount{
-			MountPath: "/mattermost-license",
-			Name:      "mattermost-license",
-			ReadOnly:  true,
-		})
-
-		volumes = append(volumes, corev1.Volume{
-			Name: "mattermost-license",
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					SecretName: mattermost.Spec.LicenseSecret,
-				},
-			},
-		})
-
-		podAnnotations = map[string]string{
-			"prometheus.io/scrape": "true",
-			"prometheus.io/path":   "/metrics",
-			"prometheus.io/port":   "8067",
-		}
+		env, vMount, volume, annotations := mattermostLicenceConfig(mattermost.Spec.LicenseSecret)
+		envVarGeneral = append(envVarGeneral, env)
+		volumeMounts = append(volumeMounts, vMount)
+		volumes = append(volumes, volume)
+		podAnnotations = annotations
 	}
 
 	// EnvVars Section
@@ -311,7 +185,6 @@ func GenerateDeploymentV1Beta(mattermost *mattermostv1beta1.Mattermost, db Datab
 	// Merge our custom env vars in.
 	envVars = mergeEnvVars(envVars, mattermost.Spec.MattermostEnv)
 
-	revHistoryLimit := int32(defaultRevHistoryLimit)
 	maxUnavailable := intstr.FromInt(defaultMaxUnavailable)
 	maxSurge := intstr.FromInt(defaultMaxSurge)
 
@@ -332,7 +205,7 @@ func GenerateDeploymentV1Beta(mattermost *mattermostv1beta1.Mattermost, db Datab
 					MaxSurge:       &maxSurge,
 				},
 			},
-			RevisionHistoryLimit: &revHistoryLimit,
+			RevisionHistoryLimit: pkgUtils.NewInt32(defaultRevHistoryLimit),
 			Replicas:             mattermost.Spec.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: mattermostv1beta1.MattermostSelectorLabels(deploymentName),
@@ -410,13 +283,17 @@ func GenerateRoleV1Beta(mattermost *mattermostv1beta1.Mattermost, roleName strin
 			Namespace:       mattermost.Namespace,
 			OwnerReferences: MattermostOwnerReference(mattermost),
 		},
-		Rules: []rbacv1.PolicyRule{
-			{
-				Verbs:         []string{"get", "list", "watch"},
-				APIGroups:     []string{"batch"},
-				Resources:     []string{"jobs"},
-				ResourceNames: []string{SetupJobName},
-			},
+		Rules: mattermostRolePermissions(),
+	}
+}
+
+func mattermostRolePermissions() []rbacv1.PolicyRule {
+	return []rbacv1.PolicyRule{
+		{
+			Verbs:         []string{"get", "list", "watch"},
+			APIGroups:     []string{"batch"},
+			Resources:     []string{"jobs"},
+			ResourceNames: []string{SetupJobName},
 		},
 	}
 }
@@ -461,4 +338,30 @@ func newServiceV1Beta(mattermost *mattermostv1beta1.Mattermost, serviceName, sel
 			Selector: mattermostv1beta1.MattermostSelectorLabels(selectorName),
 		},
 	}
+}
+
+func mattermostLicenceConfig(secret string) (corev1.EnvVar, corev1.VolumeMount, corev1.Volume, map[string]string) {
+	envVar := corev1.EnvVar{
+		Name:  "MM_SERVICESETTINGS_LICENSEFILELOCATION",
+		Value: "/mattermost-license/license",
+	}
+	volumeMount := corev1.VolumeMount{
+		MountPath: "/mattermost-license",
+		Name:      "mattermost-license",
+		ReadOnly:  true,
+	}
+	volume := corev1.Volume{
+		Name: "mattermost-license",
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: secret,
+			},
+		},
+	}
+	annotations := map[string]string{
+		"prometheus.io/scrape": "true",
+		"prometheus.io/path":   "/metrics",
+		"prometheus.io/port":   "8067",
+	}
+	return envVar, volumeMount, volume, annotations
 }

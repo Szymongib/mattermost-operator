@@ -46,7 +46,7 @@ func NewExternalDBInfo(mattermost *mattermostv1beta1.Mattermost, secret corev1.S
 }
 
 func (e *ExternalDBConfig) EnvVars(_ *mattermostv1beta1.Mattermost) []corev1.EnvVar {
-	var dbEnvVars []corev1.EnvVar = []corev1.EnvVar{
+	dbEnvVars := []corev1.EnvVar{
 		{
 			Name: "MM_CONFIG",
 			ValueFrom: &corev1.EnvVarSource{
@@ -89,7 +89,7 @@ func (e *ExternalDBConfig) InitContainers(_ *mattermostv1beta1.Mattermost) []cor
 	return initContainers
 }
 
-// GetDBCheckInitContainer tries to prepare init container that checks database readiness.
+// getDBCheckInitContainer tries to prepare init container that checks database readiness.
 // Returns nil if database type is unknown.
 func getDBCheckInitContainerV1Beta(secretName, dbType string) *corev1.Container {
 	envVars := []corev1.EnvVar{
