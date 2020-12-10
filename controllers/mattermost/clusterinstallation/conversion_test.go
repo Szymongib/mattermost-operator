@@ -2,6 +2,8 @@ package clusterinstallation
 
 import (
 	"context"
+	"testing"
+
 	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
 	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 	"github.com/mattermost/mattermost-operator/pkg/utils"
@@ -12,7 +14,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"testing"
 )
 
 func TestConvertToMM(t *testing.T) {

@@ -2,9 +2,10 @@ package mattermost
 
 import (
 	"fmt"
-	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 	"testing"
 	"time"
+
+	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 
 	blubr "github.com/mattermost/blubr"
 	"github.com/mattermost/mattermost-operator/pkg/components/utils"

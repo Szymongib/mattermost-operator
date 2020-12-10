@@ -2,6 +2,7 @@ package mattermost
 
 import (
 	"context"
+
 	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 	"github.com/mattermost/mattermost-operator/pkg/components/utils"
 	mattermostApp "github.com/mattermost/mattermost-operator/pkg/mattermost"

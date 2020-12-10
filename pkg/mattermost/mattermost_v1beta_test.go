@@ -2,12 +2,13 @@ package mattermost
 
 import (
 	"fmt"
+	"testing"
+
 	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 	"github.com/mattermost/mattermost-operator/pkg/database"
 	"github.com/mattermost/mattermost-operator/pkg/utils"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

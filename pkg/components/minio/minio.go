@@ -2,6 +2,7 @@ package minio
 
 import (
 	"fmt"
+
 	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 
 	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"

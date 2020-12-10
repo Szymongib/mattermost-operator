@@ -2,10 +2,11 @@ package mattermost
 
 import (
 	"fmt"
-	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
-	pkgUtils "github.com/mattermost/mattermost-operator/pkg/utils"
 	"strconv"
 	"strings"
+
+	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
+	pkgUtils "github.com/mattermost/mattermost-operator/pkg/utils"
 
 	rbacv1 "k8s.io/api/rbac/v1"
 

@@ -3,6 +3,7 @@ package mattermost
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-logr/logr"
 	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 	mattermostApp "github.com/mattermost/mattermost-operator/pkg/mattermost"
@@ -61,7 +62,7 @@ func (r *MattermostReconciler) checkLicence(mattermost *mattermostv1beta1.Matter
 	if mattermost.Spec.LicenseSecret == "" {
 		return nil
 	}
-	return  r.checkSecret(mattermost.Spec.LicenseSecret, "license", mattermost.Namespace)
+	return r.checkSecret(mattermost.Spec.LicenseSecret, "license", mattermost.Namespace)
 }
 
 func (r *MattermostReconciler) checkMattermostService(mattermost *mattermostv1beta1.Mattermost, resourceName, selectorName string, reqLogger logr.Logger) error {

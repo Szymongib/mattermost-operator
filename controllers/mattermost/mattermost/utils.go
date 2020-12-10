@@ -3,6 +3,8 @@ package mattermost
 import (
 	"context"
 	"fmt"
+	"reflect"
+
 	"github.com/go-logr/logr"
 	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -10,7 +12,6 @@ import (
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/pkg/errors"

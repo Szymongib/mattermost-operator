@@ -3,9 +3,10 @@ package mattermost
 import (
 	"context"
 	"fmt"
-	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 	"reflect"
 	"time"
+
+	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 
 	batchv1 "k8s.io/api/batch/v1"
 

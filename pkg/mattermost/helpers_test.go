@@ -1,8 +1,9 @@
 package mattermost
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"

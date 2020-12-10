@@ -1,9 +1,10 @@
 package mattermost
 
 import (
+	"strconv"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"strconv"
 )
 
 // mergeStringMaps inserts (and overwrites) data into receiver map object from
