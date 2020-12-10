@@ -162,7 +162,7 @@ func TestCheckMattermost(t *testing.T) {
 
 	t.Run("ingress no tls", func(t *testing.T) {
 		mm.Spec.UseIngressTLS = false
-		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, mm.Spec.IngressAnnotations, logger)
+		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, logger)
 		assert.NoError(t, err)
 
 		found := &v1beta1.Ingress{}
@@ -179,7 +179,7 @@ func TestCheckMattermost(t *testing.T) {
 
 		err = r.Client.Update(context.TODO(), modified)
 		require.NoError(t, err)
-		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, mm.Spec.IngressAnnotations, logger)
+		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, logger)
 		require.NoError(t, err)
 		err = r.Client.Get(context.TODO(), types.NamespacedName{Name: mmName, Namespace: mmNamespace}, found)
 		require.NoError(t, err)
@@ -196,7 +196,7 @@ func TestCheckMattermost(t *testing.T) {
 			"test-ingress":                "blabla",
 		}
 
-		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, mm.Spec.IngressAnnotations, logger)
+		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, logger)
 		assert.NoError(t, err)
 
 		found := &v1beta1.Ingress{}
@@ -215,7 +215,7 @@ func TestCheckMattermost(t *testing.T) {
 
 		err = r.Client.Update(context.TODO(), modified)
 		require.NoError(t, err)
-		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, mm.Spec.IngressAnnotations, logger)
+		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, logger)
 		require.NoError(t, err)
 		err = r.Client.Get(context.TODO(), types.NamespacedName{Name: mmName, Namespace: mmNamespace}, found)
 		require.NoError(t, err)
@@ -440,7 +440,7 @@ func TestCheckMattermostExternalDBAndFileStore(t *testing.T) {
 	})
 
 	t.Run("ingress", func(t *testing.T) {
-		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, mm.Spec.IngressAnnotations, logger)
+		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, logger)
 		assert.NoError(t, err)
 
 		found := &v1beta1.Ingress{}
@@ -456,7 +456,7 @@ func TestCheckMattermostExternalDBAndFileStore(t *testing.T) {
 
 		err = r.Client.Update(context.TODO(), modified)
 		require.NoError(t, err)
-		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, mm.Spec.IngressAnnotations, logger)
+		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, logger)
 		require.NoError(t, err)
 		err = r.Client.Get(context.TODO(), types.NamespacedName{Name: mmName, Namespace: mmNamespace}, found)
 		require.NoError(t, err)

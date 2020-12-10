@@ -27,7 +27,12 @@ func (r *MattermostReconciler) checkMattermost(
 	reqLogger logr.Logger) error {
 	reqLogger = reqLogger.WithValues("Reconcile", "mattermost")
 
-	err := r.checkMattermostService(mattermost, mattermost.Name, mattermost.GetProductionDeploymentName(), reqLogger)
+	err := r.checkLicence(mattermost)
+	if err != nil {
+		return errors.Wrap(err, "failed to check mattermost license secret.")
+	}
+
+	err = r.checkMattermostService(mattermost, mattermost.Name, mattermost.GetProductionDeploymentName(), reqLogger)
 	if err != nil {
 		return err
 	}
@@ -38,15 +43,7 @@ func (r *MattermostReconciler) checkMattermost(
 	}
 
 	if !mattermost.Spec.UseServiceLoadBalancer {
-		ingressAnnotations := map[string]string{
-			"kubernetes.io/ingress.class":                 "nginx",
-			"nginx.ingress.kubernetes.io/proxy-body-size": "1000M",
-		}
-		for k, v := range mattermost.Spec.IngressAnnotations {
-			ingressAnnotations[k] = v
-		}
-
-		err = r.checkMattermostIngress(mattermost, mattermost.Spec.IngressName, ingressAnnotations, reqLogger)
+		err = r.checkMattermostIngress(mattermost, mattermost.Spec.IngressName, reqLogger)
 		if err != nil {
 			return err
 		}
@@ -58,6 +55,13 @@ func (r *MattermostReconciler) checkMattermost(
 	}
 
 	return nil
+}
+
+func (r *MattermostReconciler) checkLicence(mattermost *mattermostv1beta1.Mattermost) error {
+	if mattermost.Spec.LicenseSecret == "" {
+		return nil
+	}
+	return  r.checkSecret(mattermost.Spec.LicenseSecret, "license", mattermost.Namespace)
 }
 
 func (r *MattermostReconciler) checkMattermostService(mattermost *mattermostv1beta1.Mattermost, resourceName, selectorName string, reqLogger logr.Logger) error {
@@ -142,7 +146,15 @@ func (r *MattermostReconciler) checkMattermostRoleBinding(mattermost *mattermost
 	return r.update(current, desired, reqLogger)
 }
 
-func (r *MattermostReconciler) checkMattermostIngress(mattermost *mattermostv1beta1.Mattermost, ingressHost string, ingressAnnotations map[string]string, reqLogger logr.Logger) error {
+func (r *MattermostReconciler) checkMattermostIngress(mattermost *mattermostv1beta1.Mattermost, ingressHost string, reqLogger logr.Logger) error {
+	ingressAnnotations := map[string]string{
+		"kubernetes.io/ingress.class":                 "nginx",
+		"nginx.ingress.kubernetes.io/proxy-body-size": "1000M",
+	}
+	for k, v := range mattermost.Spec.IngressAnnotations {
+		ingressAnnotations[k] = v
+	}
+
 	desired := mattermostApp.GenerateIngressV1Beta(mattermost, mattermost.Name, ingressHost, ingressAnnotations)
 
 	err := r.createIngressIfNotExists(mattermost, desired, reqLogger)
@@ -163,13 +175,6 @@ func (r *MattermostReconciler) checkMattermostDeployment(
 	mattermost *mattermostv1beta1.Mattermost,
 	dbInfo mattermostApp.DatabaseConfig,
 	fileStoreInfo *mattermostApp.FileStoreInfo, reqLogger logr.Logger) error {
-
-	if mattermost.Spec.LicenseSecret != "" {
-		err := r.checkSecret(mattermost.Spec.LicenseSecret, "license", mattermost.Namespace)
-		if err != nil {
-			return errors.Wrap(err, "failed to get mattermost license secret.")
-		}
-	}
 
 	desired := mattermostApp.GenerateDeploymentV1Beta(
 		mattermost,
@@ -303,7 +308,6 @@ func prepareJobTemplate(mm *mattermostv1beta1.Mattermost, deployment *appsv1.Dep
 
 // isMainDeploymentContainerImageSame checks whether main containers of specified deployments are the same or not.
 func (r *MattermostReconciler) isMainDeploymentContainerImageSame(
-	mattermost *mattermostv1beta1.Mattermost,
 	a *appsv1.Deployment,
 	b *appsv1.Deployment,
 ) (bool, error) {
@@ -313,7 +317,6 @@ func (r *MattermostReconciler) isMainDeploymentContainerImageSame(
 	}
 
 	isSameImage, err := r.isMainContainerImageSame(
-		mattermost,
 		a.Spec.Template.Spec.Containers,
 		b.Spec.Template.Spec.Containers,
 	)
@@ -326,7 +329,6 @@ func (r *MattermostReconciler) isMainDeploymentContainerImageSame(
 
 // isMainContainerImageSame checks whether main containers of specified slices are the same or not.
 func (r *MattermostReconciler) isMainContainerImageSame(
-	mattermost *mattermostv1beta1.Mattermost,
 	a []corev1.Container,
 	b []corev1.Container,
 ) (bool, error) {
@@ -352,7 +354,7 @@ func (r *MattermostReconciler) updateMattermostDeployment(
 	desired *appsv1.Deployment,
 	reqLogger logr.Logger,
 ) error {
-	sameImage, err := r.isMainDeploymentContainerImageSame(mattermost, current, desired)
+	sameImage, err := r.isMainDeploymentContainerImageSame(current, desired)
 	if err != nil {
 		return err
 	}
@@ -410,7 +412,6 @@ func (r *MattermostReconciler) checkUpdateJob(
 
 	// If desired deployment image does not match the one used by update job, restart it.
 	isSameImage, err := r.isMainContainerImageSame(
-		mattermost,
 		desired.Spec.Template.Spec.Containers,
 		job.Spec.Template.Spec.Containers,
 	)
@@ -446,25 +447,10 @@ func (r *MattermostReconciler) checkUpdateJob(
 func (r *MattermostReconciler) cleanupUpdateJob(job *batchv1.Job, reqLogger logr.Logger) {
 	reqLogger.Info(fmt.Sprintf("Deleting update image job %s/%s", job.GetNamespace(), job.GetName()))
 
-	err := r.Client.Delete(context.TODO(), job)
+	err := r.Client.Delete(context.TODO(), job, k8sClient.PropagationPolicy(metav1.DeletePropagationBackground))
 	if err != nil {
+		// Do not return error on fail as it is not critical
 		reqLogger.Error(err, "Unable to cleanup update image job")
-	}
-
-	podList := &corev1.PodList{}
-	listOptions := []k8sClient.ListOption{
-		k8sClient.InNamespace(job.GetNamespace()),
-		k8sClient.MatchingLabels(map[string]string{"app": updateJobName}),
-	}
-
-	err = r.Client.List(context.Background(), podList, listOptions...)
-	reqLogger.Info(fmt.Sprintf("Deleting %d pods", len(podList.Items)))
-	for _, pod := range podList.Items {
-		reqLogger.Info(fmt.Sprintf("Deleting pod %s/%s", pod.Namespace, pod.Name))
-		err = r.Client.Delete(context.TODO(), &pod)
-		if err != nil {
-			reqLogger.Error(err, fmt.Sprintf("Problem deleting pod %s/%s", pod.Namespace, pod.Name))
-		}
 	}
 }
 

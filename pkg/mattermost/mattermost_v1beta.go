@@ -41,26 +41,34 @@ func GenerateServiceV1Beta(mattermost *mattermostv1beta1.Mattermost, serviceName
 		service := newServiceV1Beta(mattermost, serviceName, selectorName,
 			mergeStringMaps(baseAnnotations, mattermost.Spec.ServiceAnnotations),
 		)
-		service.Spec.Ports = []corev1.ServicePort{
-			{
-				Name:       "http",
-				Port:       80,
-				TargetPort: intstr.FromString("app"),
-			},
-			{
-				Name:       "https",
-				Port:       443,
-				TargetPort: intstr.FromString("app"),
-			},
-		}
-		service.Spec.Type = corev1.ServiceTypeLoadBalancer
-
-		return service
+		return configureMattermostLoadBalancerService(service)
 	}
 
 	// Create a headless service which is not directly accessible from outside
 	// the cluster and thus exposes a custom port.
 	service := newServiceV1Beta(mattermost, serviceName, selectorName, baseAnnotations)
+	return configureMattermostService(service)
+}
+
+func configureMattermostLoadBalancerService(service *corev1.Service) *corev1.Service {
+	service.Spec.Ports = []corev1.ServicePort{
+		{
+			Name:       "http",
+			Port:       80,
+			TargetPort: intstr.FromString("app"),
+		},
+		{
+			Name:       "https",
+			Port:       443,
+			TargetPort: intstr.FromString("app"),
+		},
+	}
+	service.Spec.Type = corev1.ServiceTypeLoadBalancer
+
+	return service
+}
+
+func configureMattermostService(service *corev1.Service) *corev1.Service {
 	service.Spec.Ports = []corev1.ServicePort{
 		{
 			Port:       8065,
@@ -175,7 +183,7 @@ func GenerateDeploymentV1Beta(mattermost *mattermostv1beta1.Mattermost, db Datab
 		podAnnotations = annotations
 	}
 
-	// EnvVars Section
+	// Concat EnvVars
 	envVars := []corev1.EnvVar{}
 	envVars = append(envVars, envVarDB...)
 	envVars = append(envVars, envVarFileStore...)

@@ -38,41 +38,13 @@ func GenerateService(mattermost *mattermostv1alpha1.ClusterInstallation, service
 		service := newService(mattermost, serviceName, selectorName,
 			mergeStringMaps(baseAnnotations, mattermost.Spec.ServiceAnnotations),
 		)
-		service.Spec.Ports = []corev1.ServicePort{
-			{
-				Name:       "http",
-				Port:       80,
-				TargetPort: intstr.FromString("app"),
-			},
-			{
-				Name:       "https",
-				Port:       443,
-				TargetPort: intstr.FromString("app"),
-			},
-		}
-		service.Spec.Type = corev1.ServiceTypeLoadBalancer
-
-		return service
+		return configureMattermostLoadBalancerService(service)
 	}
 
 	// Create a headless service which is not directly accessible from outside
 	// the cluster and thus exposes a custom port.
 	service := newService(mattermost, serviceName, selectorName, baseAnnotations)
-	service.Spec.Ports = []corev1.ServicePort{
-		{
-			Port:       8065,
-			Name:       "app",
-			TargetPort: intstr.FromString("app"),
-		},
-		{
-			Port:       8067,
-			Name:       "metrics",
-			TargetPort: intstr.FromString("metrics"),
-		},
-	}
-	service.Spec.ClusterIP = corev1.ClusterIPNone
-
-	return service
+	return configureMattermostService(service)
 }
 
 // GenerateIngress returns the ingress for the Mattermost app.

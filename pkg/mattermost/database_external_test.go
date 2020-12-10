@@ -2,8 +2,8 @@ package mattermost
 
 import (
 	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
@@ -12,12 +12,11 @@ import (
 func TestNewExternalDBInfo(t *testing.T) {
 	mattermost := &mattermostv1beta1.Mattermost{
 		ObjectMeta: metav1.ObjectMeta{Name: "mm-test"},
-		Spec:       mattermostv1beta1.MattermostSpec{
+		Spec: mattermostv1beta1.MattermostSpec{
 			Database: mattermostv1beta1.Database{
 				External: &mattermostv1beta1.ExternalDatabase{Secret: "secret"},
 			},
 		},
-		Status:     mattermostv1beta1.MattermostStatus{},
 	}
 
 	secret := corev1.Secret{
@@ -42,8 +41,8 @@ func TestNewExternalDBInfo(t *testing.T) {
 		assert.Equal(t, 0, len(initContainers))
 	})
 
-	secret.Data["MM_SQLSETTINGS_DATASOURCEREPLICAS"] =[]byte("postgres://my-postgres")
-	secret.Data["DB_CONNECTION_CHECK_URL"] =[]byte("postgres://my-postgres")
+	secret.Data["MM_SQLSETTINGS_DATASOURCEREPLICAS"] = []byte("postgres://my-postgres")
+	secret.Data["DB_CONNECTION_CHECK_URL"] = []byte("postgres://my-postgres")
 
 	t.Run("with db check url and reader and endpoints", func(t *testing.T) {
 		config, err := NewExternalDBInfo(mattermost, secret)

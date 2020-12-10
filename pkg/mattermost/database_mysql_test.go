@@ -12,12 +12,11 @@ import (
 func TestNewMySQLDB(t *testing.T) {
 	mattermost := &mattermostv1beta1.Mattermost{
 		ObjectMeta: metav1.ObjectMeta{Name: "mm-test"},
-		Spec:       mattermostv1beta1.MattermostSpec{
+		Spec: mattermostv1beta1.MattermostSpec{
 			Database: mattermostv1beta1.Database{
 				OperatorManaged: &mattermostv1beta1.OperatorManagedDatabase{},
 			},
 		},
-		Status:     mattermostv1beta1.MattermostStatus{},
 	}
 
 	secret := corev1.Secret{
@@ -32,7 +31,7 @@ func TestNewMySQLDB(t *testing.T) {
 
 	t.Run("create config", func(t *testing.T) {
 		config, err := NewMySQLDB(secret)
-		require.NoError(t,err)
+		require.NoError(t, err)
 		assert.Equal(t, "secret", config.secretName)
 		assert.Equal(t, "root-pass", config.rootPassword)
 		assert.Equal(t, "user", config.userName)
@@ -41,28 +40,31 @@ func TestNewMySQLDB(t *testing.T) {
 
 		envs := config.EnvVars(mattermost)
 		assert.Equal(t, 4, len(envs))
+
+		initContainers := config.InitContainers(mattermost)
+		assert.Equal(t, 1, len(initContainers))
 	})
 
 	t.Run("should fail if missing key", func(t *testing.T) {
-		for _, testCase := range []struct{
+		for _, testCase := range []struct {
 			description string
-			missingKey string
+			missingKey  string
 		}{
 			{
 				description: "root pass",
-				missingKey: "ROOT_PASSWORD",
+				missingKey:  "ROOT_PASSWORD",
 			},
 			{
 				description: "user",
-				missingKey: "USER",
+				missingKey:  "USER",
 			},
 			{
 				description: "pass",
-				missingKey: "PASSWORD",
+				missingKey:  "PASSWORD",
 			},
 			{
 				description: "db",
-				missingKey: "DATABASE",
+				missingKey:  "DATABASE",
 			},
 		} {
 			t.Run(testCase.description, func(t *testing.T) {
@@ -79,7 +81,7 @@ func TestNewMySQLDB(t *testing.T) {
 				delete(secret.Data, testCase.missingKey)
 
 				_, err := NewMySQLDB(secret)
-				require.Error(t,err)
+				require.Error(t, err)
 			})
 		}
 	})
