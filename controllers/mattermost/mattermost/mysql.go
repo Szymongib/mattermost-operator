@@ -73,7 +73,7 @@ func (r *MattermostReconciler) getOrCreateMySQLSecrets(mattermost *mattermostv1b
 		return nil, err
 	}
 
-	return mattermostApp.NewMySQLDB(*dbSecret)
+	return mattermostApp.NewMySQLDBConfig(*dbSecret)
 }
 
 func (r *MattermostReconciler) createMySQLSecret(mattermost *mattermostv1beta1.Mattermost, secretName string, reqLogger logr.Logger) (mattermostApp.DatabaseConfig, error) {
@@ -100,5 +100,5 @@ func (r *MattermostReconciler) createMySQLSecret(mattermost *mattermostv1beta1.M
 		return nil, errors.Wrap(err, "failed to create mysql secret")
 	}
 
-	return mattermostApp.NewMySQLDB(*dbSecret)
+	return mattermostApp.NewMySQLDBConfig(*dbSecret)
 }

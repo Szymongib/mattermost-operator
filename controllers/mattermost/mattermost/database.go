@@ -31,7 +31,7 @@ func (r *MattermostReconciler) readExternalDBSecret(mattermost *mattermostv1beta
 		return nil, errors.Wrap(err, "failed to get external db Secret")
 	}
 
-	return mattermostApp.NewExternalDBInfo(mattermost, secret)
+	return mattermostApp.NewExternalDBConfig(mattermost, secret)
 }
 
 func (r *MattermostReconciler) checkOperatorManagedDB(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) (mattermostApp.DatabaseConfig, error) {
