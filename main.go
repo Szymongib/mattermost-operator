@@ -115,10 +115,10 @@ func main() {
 		os.Exit(1)
 	}
 	if err = mattermost.NewMattermostReconciler(
-			mgr,
-			config.MaxReconcilingInstallations,
-			config.RequeueOnLimitDelay,
-		).
+		mgr,
+		config.MaxReconcilingInstallations,
+		config.RequeueOnLimitDelay,
+	).
 		SetupWithManager(mgr); err != nil {
 		logger.Error(err, "Unable to create controller", "controller", "Mattermost")
 		os.Exit(1)

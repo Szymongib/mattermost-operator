@@ -20,7 +20,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1beta1 "k8s.io/api/extensions/v1beta1"
+	v1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -51,7 +51,7 @@ func TestCheckMattermost(t *testing.T) {
 		},
 	}
 
-	dbInfo, err := mattermostApp.NewMySQLDB(corev1.Secret{
+	dbInfo, err := mattermostApp.NewMySQLDBConfig(corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Name: "dbSecret"},
 		Data: map[string][]byte{
 			"ROOT_PASSWORD": []byte("root-pass"),
@@ -386,7 +386,7 @@ func TestCheckMattermostExternalDBAndFileStore(t *testing.T) {
 		},
 	}
 
-	dbInfo, err := mattermostApp.NewExternalDBInfo(mm, corev1.Secret{
+	dbInfo, err := mattermostApp.NewExternalDBConfig(mm, corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Name: "dbSecret"},
 		Data: map[string][]byte{
 			"DB_CONNECTION_STRING": []byte("postgres://my-postgres:5432"),
@@ -407,11 +407,11 @@ func TestCheckMattermostExternalDBAndFileStore(t *testing.T) {
 	s.AddKnownTypes(mattermostv1beta1.GroupVersion, mm)
 	c := fake.NewFakeClient()
 	r := &MattermostReconciler{
-		Client: c,
-		Scheme: s,
-		Log: logger,
+		Client:         c,
+		Scheme:         s,
+		Log:            logger,
 		MaxReconciling: 5,
-		ResCreator: resources.NewResourceCreator(c, s),
+		ResCreator:     resources.NewResourceCreator(c, s),
 	}
 
 	externalDBSecret := &corev1.Secret{

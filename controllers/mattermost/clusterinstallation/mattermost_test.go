@@ -18,7 +18,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1beta1 "k8s.io/api/extensions/v1beta1"
+	v1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -53,11 +53,11 @@ func TestCheckMattermost(t *testing.T) {
 	s.AddKnownTypes(mattermostv1alpha1.GroupVersion, ci)
 	c := fake.NewFakeClient()
 	r := &ClusterInstallationReconciler{
-		Client: c,
-		Scheme: s,
-		Log: logger,
+		Client:         c,
+		Scheme:         s,
+		Log:            logger,
 		MaxReconciling: 5,
-		ResCreator:         resources.NewResourceCreator(c, s),
+		ResCreator:     resources.NewResourceCreator(c, s),
 	}
 
 	err := prepAllDependencyTestResources(r.Client, ci)
@@ -383,7 +383,7 @@ func TestCheckMattermostExternalDB(t *testing.T) {
 		Scheme:              s,
 		MaxReconciling:      5,
 		RequeueOnLimitDelay: 0,
-		ResCreator:         resources.NewResourceCreator(c, s),
+		ResCreator:          resources.NewResourceCreator(c, s),
 	}
 
 	err := prepAllDependencyTestResources(r.Client, ci)

@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
-	"k8s.io/api/extensions/v1beta1"
+	"k8s.io/api/networking/v1beta1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -509,7 +509,7 @@ func TestReconcilingLimit(t *testing.T) {
 		Log:                 logger,
 		MaxReconciling:      2,
 		RequeueOnLimitDelay: requeueOnLimitDelay,
-		ResCreator:         resources.NewResourceCreator(c, s),
+		ResCreator:          resources.NewResourceCreator(c, s),
 	}
 
 	assertInstallationsCount := func(t *testing.T, expectedCIs, expectedReconciling int) {
