@@ -87,7 +87,7 @@ func (hc *HealthChecker) AssertDeploymentRolloutStarted(name, namespace string) 
 		return errors.Wrap(err, "failed to get deployment")
 	}
 	if deployment.Generation != deployment.Status.ObservedGeneration {
-		return fmt.Errorf("mattermost deployment not yet picked up by the Deployment controller")
+		return errors.New("mattermost deployment not yet picked up by the Deployment controller")
 	}
 
 	// We check if new ReplicaSet was created and it was observed by the controller

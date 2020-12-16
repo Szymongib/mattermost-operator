@@ -214,7 +214,7 @@ func (r *MattermostReconciler) checkMattermostDeployment(
 }
 
 func (r *MattermostReconciler) checkMattermostDBSetupJob(mattermost *mattermostv1beta1.Mattermost, deployment *appsv1.Deployment, reqLogger logr.Logger) error {
-	desiredJob := prepareJobTemplate(mattermost, deployment, mattermostApp.SetupJobName)
+	desiredJob := prepareJobTemplate(mattermostApp.SetupJobName, mattermost.Namespace, deployment)
 	desiredJob.OwnerReferences = mattermostApp.MattermostOwnerReference(mattermost)
 
 	currentJob := &batchv1.Job{}
@@ -231,10 +231,10 @@ func (r *MattermostReconciler) checkMattermostDBSetupJob(mattermost *mattermostv
 }
 
 func (r *MattermostReconciler) launchUpdateJob(
-	mi *mattermostv1beta1.Mattermost,
+	jobNamespace string,
 	deployment *appsv1.Deployment,
 ) error {
-	job := prepareJobTemplate(mi, deployment, updateJobName)
+	job := prepareJobTemplate(updateJobName, jobNamespace, deployment)
 
 	err := r.Client.Create(context.TODO(), job)
 	if err != nil && !k8sErrors.IsAlreadyExists(err) {
@@ -246,7 +246,7 @@ func (r *MattermostReconciler) launchUpdateJob(
 
 // restartUpdateJob removes existing update job if it exists and creates new one.
 func (r *MattermostReconciler) restartUpdateJob(
-	mi *mattermostv1beta1.Mattermost,
+	jobNamespace string,
 	currentJob *batchv1.Job,
 	deployment *appsv1.Deployment,
 ) error {
@@ -255,7 +255,7 @@ func (r *MattermostReconciler) restartUpdateJob(
 		return errors.Wrapf(err, "failed to delete outdated update job")
 	}
 
-	job := prepareJobTemplate(mi, deployment, updateJobName)
+	job := prepareJobTemplate(updateJobName, jobNamespace, deployment)
 
 	err = r.Client.Create(context.TODO(), job)
 	if err != nil {
@@ -265,20 +265,20 @@ func (r *MattermostReconciler) restartUpdateJob(
 	return nil
 }
 
-func prepareJobTemplate(mm *mattermostv1beta1.Mattermost, deployment *appsv1.Deployment, name string) *batchv1.Job {
+func prepareJobTemplate(name, namespace string, baseDeployment *appsv1.Deployment) *batchv1.Job {
 	backoffLimit := int32(10)
 
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: mm.GetNamespace(),
+			Namespace: namespace,
 		},
 		Spec: batchv1.JobSpec{
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{"app": updateJobName},
 				},
-				Spec: *deployment.Spec.Template.Spec.DeepCopy(),
+				Spec: *baseDeployment.Spec.Template.Spec.DeepCopy(),
 			},
 			BackoffLimit: &backoffLimit,
 		},
@@ -373,7 +373,7 @@ func (r *MattermostReconciler) updateMattermostDeployment(
 
 	reqLogger.Info("Current image is not the same as the requested, will upgrade the Mattermost installation")
 
-	job, err := r.checkUpdateJob(mattermost, desired, reqLogger)
+	job, err := r.checkUpdateJob(mattermost.Namespace, desired, reqLogger)
 	if job != nil {
 		// Job is done, need to cleanup
 		defer r.cleanupUpdateJob(job, reqLogger)
@@ -389,18 +389,16 @@ func (r *MattermostReconciler) updateMattermostDeployment(
 
 // checkUpdateJob checks whether update job status. In case job is not running it is launched
 func (r *MattermostReconciler) checkUpdateJob(
-	mattermost *mattermostv1beta1.Mattermost,
-	desired *appsv1.Deployment,
+	jobNamespace string,
+	baseDeployment *appsv1.Deployment,
 	reqLogger logr.Logger,
 ) (*batchv1.Job, error) {
-	reqLogger.Info(fmt.Sprintf("Running Mattermost update image job check for image %s", mattermostv1beta1.GetMattermostAppContainerFromDeployment(desired).Image))
-	job, err := r.fetchRunningUpdateJob(mattermost)
+	reqLogger.Info(fmt.Sprintf("Running Mattermost update image job check for image %s", mattermostv1beta1.GetMattermostAppContainerFromDeployment(baseDeployment).Image))
+	job, err := r.fetchRunningUpdateJob(jobNamespace)
 	if err != nil {
-		// Unable to fetch job
 		if k8sErrors.IsNotFound(err) {
-			// Job is not running, let's launch
 			reqLogger.Info("Launching update image job")
-			if err = r.launchUpdateJob(mattermost, desired); err != nil {
+			if err = r.launchUpdateJob(jobNamespace, baseDeployment); err != nil {
 				return nil, errors.Wrap(err, "Launching update image job failed")
 			}
 			return nil, errors.New("Began update image job")
@@ -413,7 +411,7 @@ func (r *MattermostReconciler) checkUpdateJob(
 
 	// If desired deployment image does not match the one used by update job, restart it.
 	isSameImage, err := r.isMainContainerImageSame(
-		desired.Spec.Template.Spec.Containers,
+		baseDeployment.Spec.Template.Spec.Containers,
 		job.Spec.Template.Spec.Containers,
 	)
 	if err != nil {
@@ -421,7 +419,7 @@ func (r *MattermostReconciler) checkUpdateJob(
 	}
 	if !isSameImage {
 		reqLogger.Info("Mattermost image changed, restarting update job")
-		err := r.restartUpdateJob(mattermost, job, desired)
+		err := r.restartUpdateJob(jobNamespace, job, baseDeployment)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to restart update job")
 		}
@@ -456,13 +454,13 @@ func (r *MattermostReconciler) cleanupUpdateJob(job *batchv1.Job, reqLogger logr
 }
 
 // fetchRunningUpdateJob gets update job
-func (r *MattermostReconciler) fetchRunningUpdateJob(mi *mattermostv1beta1.Mattermost) (*batchv1.Job, error) {
+func (r *MattermostReconciler) fetchRunningUpdateJob(namespace string) (*batchv1.Job, error) {
 	job := &batchv1.Job{}
 	err := r.Client.Get(
 		context.TODO(),
 		types.NamespacedName{
 			Name:      updateJobName,
-			Namespace: mi.GetNamespace(),
+			Namespace: namespace,
 		},
 		job,
 	)
