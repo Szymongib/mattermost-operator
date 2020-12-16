@@ -3,6 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/mattermost/mattermost-operator/controllers/mattermost/clusterinstallation"
+	"github.com/mattermost/mattermost-operator/controllers/mattermost/mattermost"
+	"github.com/mattermost/mattermost-operator/controllers/mattermost/mattermostrestoredb"
 	"os"
 	"runtime"
 	"time"
@@ -20,8 +23,6 @@ import (
 
 	mattermostcomv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
 	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
-	"github.com/mattermost/mattermost-operator/controllers/mattermost/clusterinstallation"
-	"github.com/mattermost/mattermost-operator/controllers/mattermost/mattermostrestoredb"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -113,6 +114,16 @@ func main() {
 		logger.Error(err, "Unable to create controller", "controller", "MattermostRestoreDB")
 		os.Exit(1)
 	}
+	if err = mattermost.NewMattermostReconciler(
+			mgr,
+			config.MaxReconcilingInstallations,
+			config.RequeueOnLimitDelay,
+		).
+		SetupWithManager(mgr); err != nil {
+		logger.Error(err, "Unable to create controller", "controller", "Mattermost")
+		os.Exit(1)
+	}
+
 	// +kubebuilder:scaffold:builder
 
 	logger.Info("Starting manager")

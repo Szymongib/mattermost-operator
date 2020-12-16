@@ -2,6 +2,7 @@ package clusterinstallation
 
 import (
 	"fmt"
+	"github.com/mattermost/mattermost-operator/pkg/resources"
 	"testing"
 	"time"
 
@@ -67,6 +68,7 @@ func TestReconcile(t *testing.T) {
 		Scheme:             s,
 		Log:                logger,
 		MaxReconciling:     5,
+		ResCreator:         resources.NewResourceCreator(c, s),
 	}
 
 	err := c.Create(context.TODO(), ci)
@@ -507,6 +509,7 @@ func TestReconcilingLimit(t *testing.T) {
 		Log:                 logger,
 		MaxReconciling:      2,
 		RequeueOnLimitDelay: requeueOnLimitDelay,
+		ResCreator:         resources.NewResourceCreator(c, s),
 	}
 
 	assertInstallationsCount := func(t *testing.T, expectedCIs, expectedReconciling int) {

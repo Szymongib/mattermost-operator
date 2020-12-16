@@ -3,6 +3,7 @@ package clusterinstallation
 import (
 	"context"
 	"fmt"
+	"github.com/mattermost/mattermost-operator/pkg/resources"
 	"reflect"
 	"time"
 
@@ -34,6 +35,7 @@ type ClusterInstallationReconciler struct {
 	Scheme              *runtime.Scheme
 	MaxReconciling      int
 	RequeueOnLimitDelay time.Duration
+	ResCreator 			*resources.ResourceCreator
 }
 
 // +kubebuilder:rbac:groups=mattermost.com,resources=clusterinstallations,verbs=get;list;watch;create;update;patch;delete
@@ -73,6 +75,25 @@ func (r *ClusterInstallationReconciler) Reconcile(request ctrl.Request) (ctrl.Re
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
+
+	// TODO: cleanup
+	//var existingMM mattermostv1beta1.Mattermost
+	//err = r.Get(context.Background(), request.NamespacedName, &existingMM)
+	//if err != nil && !k8sErrors.IsNotFound(err) {
+	//	return ctrl.Result{}, err
+	//}
+	//
+	//mm, err := r.ConvertToMM(mattermost)
+	//if err != nil {
+	//	return ctrl.Result{}, err
+	//}
+	//
+	//err = r.Client.Create(context.Background(), mm)
+	//if err != nil {
+	//	return ctrl.Result{}, err
+	//}
+	//
+	//return ctrl.Result{}, nil
 
 	if mattermost.Status.State != mattermostv1alpha1.Reconciling {
 		var clusterInstallations mattermostv1alpha1.ClusterInstallationList

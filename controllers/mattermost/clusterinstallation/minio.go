@@ -55,7 +55,7 @@ func (r *ClusterInstallationReconciler) checkMattermostMinioSecret(mattermost *m
 	case err != nil && kerrors.IsNotFound(err):
 		// Create new secret
 		reqLogger.Info("creating minio secret", "name", desired.Name, "namespace", desired.Namespace)
-		return r.create(mattermost, desired, reqLogger)
+		return r.ResCreator.Create(mattermost, desired, reqLogger)
 	case err != nil:
 		// Something go wrong badly
 		reqLogger.Error(err, "failed to check if secret exists")
@@ -64,15 +64,15 @@ func (r *ClusterInstallationReconciler) checkMattermostMinioSecret(mattermost *m
 	// Validate secret required fields, if not exist recreate.
 	if _, ok := current.Data["accesskey"]; !ok {
 		reqLogger.Info("minio secret does not have an 'accesskey' value, overriding", "name", desired.Name)
-		return r.update(current, desired, reqLogger)
+		return r.ResCreator.Update(current, desired, reqLogger)
 	}
 	if _, ok := current.Data["secretkey"]; !ok {
 		reqLogger.Info("minio secret does not have an 'secretkey' value, overriding", "name", desired.Name)
-		return r.update(current, desired, reqLogger)
+		return r.ResCreator.Update(current, desired, reqLogger)
 	}
 	// Preserve data fields
 	desired.Data = current.Data
-	return r.update(current, desired, reqLogger)
+	return r.ResCreator.Update(current, desired, reqLogger)
 }
 
 func (r *ClusterInstallationReconciler) checkMinioSecret(mattermost *mattermostv1alpha1.ClusterInstallation, reqLogger logr.Logger) error {
@@ -100,7 +100,7 @@ func (r *ClusterInstallationReconciler) checkMinioInstance(mattermost *mattermos
 	// For some reason, our current minio operator seems to remove labels on
 	// the instance resource when we add them. For that reason, trying to
 	// ensure the labels are correct doesn't work.
-	return r.update(current, desired, reqLogger)
+	return r.ResCreator.Update(current, desired, reqLogger)
 }
 
 func (r *ClusterInstallationReconciler) createMinioInstanceIfNotExists(mattermost *mattermostv1alpha1.ClusterInstallation, instance *minioOperator.MinIOInstance, reqLogger logr.Logger) error {
@@ -108,7 +108,7 @@ func (r *ClusterInstallationReconciler) createMinioInstanceIfNotExists(mattermos
 	err := r.Client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, foundInstance)
 	if err != nil && kerrors.IsNotFound(err) {
 		reqLogger.Info("Creating minio instance")
-		return r.create(mattermost, instance, reqLogger)
+		return r.ResCreator.Create(mattermost, instance, reqLogger)
 	} else if err != nil {
 		reqLogger.Error(err, "Unable to get minio instance")
 		return err
