@@ -43,7 +43,7 @@ func (r *MattermostReconciler) checkOperatorManagedMinio(mattermost *mattermostv
 		return nil, errors.Wrap(err, "failed to check Minio instance")
 	}
 
-	url, err := r.getMinioService(mattermost, reqLogger)
+	url, err := r.getMinioService(mattermost)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get Minio URL")
 	}
