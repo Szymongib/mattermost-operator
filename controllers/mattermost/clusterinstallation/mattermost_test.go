@@ -2,8 +2,9 @@ package clusterinstallation
 
 import (
 	"context"
-	"github.com/mattermost/mattermost-operator/pkg/resources"
 	"testing"
+
+	"github.com/mattermost/mattermost-operator/pkg/resources"
 
 	rbacv1 "k8s.io/api/rbac/v1"
 

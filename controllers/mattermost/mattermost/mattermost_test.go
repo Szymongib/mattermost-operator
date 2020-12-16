@@ -3,8 +3,9 @@ package mattermost
 import (
 	"context"
 	"fmt"
-	"github.com/mattermost/mattermost-operator/pkg/resources"
 	"testing"
+
+	"github.com/mattermost/mattermost-operator/pkg/resources"
 
 	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 	mattermostApp "github.com/mattermost/mattermost-operator/pkg/mattermost"

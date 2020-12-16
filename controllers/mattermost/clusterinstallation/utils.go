@@ -3,8 +3,9 @@ package clusterinstallation
 import (
 	"context"
 	"fmt"
-	"github.com/mattermost/mattermost-operator/pkg/mattermost/healthcheck"
 	"reflect"
+
+	"github.com/mattermost/mattermost-operator/pkg/mattermost/healthcheck"
 
 	"github.com/go-logr/logr"
 	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"

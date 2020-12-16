@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+
 	"github.com/go-logr/logr"
 	"github.com/mattermost/mattermost-operator/pkg/components/utils"
 	"github.com/pkg/errors"

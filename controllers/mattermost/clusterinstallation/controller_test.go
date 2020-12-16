@@ -2,9 +2,10 @@ package clusterinstallation
 
 import (
 	"fmt"
-	"github.com/mattermost/mattermost-operator/pkg/resources"
 	"testing"
 	"time"
+
+	"github.com/mattermost/mattermost-operator/pkg/resources"
 
 	blubr "github.com/mattermost/blubr"
 	"github.com/mattermost/mattermost-operator/pkg/components/utils"

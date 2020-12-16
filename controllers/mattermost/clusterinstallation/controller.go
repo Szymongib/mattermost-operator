@@ -3,9 +3,10 @@ package clusterinstallation
 import (
 	"context"
 	"fmt"
-	"github.com/mattermost/mattermost-operator/pkg/resources"
 	"reflect"
 	"time"
+
+	"github.com/mattermost/mattermost-operator/pkg/resources"
 
 	batchv1 "k8s.io/api/batch/v1"
 

@@ -12,7 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *MattermostReconciler) checkSecret(secretName, keyName, namespace string) error {
+func (r *MattermostReconciler) assertSecretContains(secretName, keyName, namespace string) error {
 	foundSecret := &corev1.Secret{}
 	err := r.Client.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: namespace}, foundSecret)
 	if err != nil {

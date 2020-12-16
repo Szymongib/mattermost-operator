@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+
 	"github.com/go-logr/logr"
 	minioOperator "github.com/minio/minio-operator/pkg/apis/miniocontroller/v1beta1"
 	"github.com/pkg/errors"
