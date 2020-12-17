@@ -31,20 +31,20 @@ type Object interface {
 	v1.Object
 }
 
-type ResourceCreator struct {
+type ResourceHelper struct {
 	client client.Client
 	scheme *runtime.Scheme
 }
 
-func NewResourceCreator(client client.Client, scheme *runtime.Scheme) *ResourceCreator {
-	return &ResourceCreator{
+func NewResourceCreator(client client.Client, scheme *runtime.Scheme) *ResourceHelper {
+	return &ResourceHelper{
 		client: client,
 		scheme: scheme,
 	}
 }
 
 // create creates the provided resource and sets the owner
-func (r *ResourceCreator) Create(owner v1.Object, desired Object, reqLogger logr.Logger) error {
+func (r *ResourceHelper) Create(owner v1.Object, desired Object, reqLogger logr.Logger) error {
 	// adding the last applied annotation to use the object matcher later
 	// see: https://github.com/banzaicloud/k8s-objectmatcher
 	err := defaultAnnotator.SetLastAppliedAnnotation(desired)
@@ -59,7 +59,7 @@ func (r *ResourceCreator) Create(owner v1.Object, desired Object, reqLogger logr
 	return controllerutil.SetControllerReference(owner, desired, r.scheme)
 }
 
-func (r *ResourceCreator) Update(current, desired Object, reqLogger logr.Logger) error {
+func (r *ResourceHelper) Update(current, desired Object, reqLogger logr.Logger) error {
 	patchResult, err := objectMatcher.NewPatchMaker(defaultAnnotator).Calculate(current, desired)
 	if err != nil {
 		return errors.Wrap(err, "failed to determine if resources differ")
@@ -80,7 +80,7 @@ func (r *ResourceCreator) Update(current, desired Object, reqLogger logr.Logger)
 	return nil
 }
 
-func (r *ResourceCreator) CreateServiceAccountIfNotExists(owner v1.Object, serviceAccount *corev1.ServiceAccount, reqLogger logr.Logger) error {
+func (r *ResourceHelper) CreateServiceAccountIfNotExists(owner v1.Object, serviceAccount *corev1.ServiceAccount, reqLogger logr.Logger) error {
 	foundServiceAccount := &corev1.ServiceAccount{}
 
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: serviceAccount.Name, Namespace: serviceAccount.Namespace}, foundServiceAccount)
@@ -94,7 +94,7 @@ func (r *ResourceCreator) CreateServiceAccountIfNotExists(owner v1.Object, servi
 	return nil
 }
 
-func (r *ResourceCreator) CreateRoleBindingIfNotExists(owner v1.Object, roleBinding *rbacv1.RoleBinding, reqLogger logr.Logger) error {
+func (r *ResourceHelper) CreateRoleBindingIfNotExists(owner v1.Object, roleBinding *rbacv1.RoleBinding, reqLogger logr.Logger) error {
 	foundRoleBinding := &rbacv1.RoleBinding{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: roleBinding.Name, Namespace: roleBinding.Namespace}, foundRoleBinding)
 	if err != nil && k8sErrors.IsNotFound(err) {
@@ -107,7 +107,7 @@ func (r *ResourceCreator) CreateRoleBindingIfNotExists(owner v1.Object, roleBind
 	return nil
 }
 
-func (r *ResourceCreator) CreateServiceIfNotExists(owner v1.Object, service *corev1.Service, reqLogger logr.Logger) error {
+func (r *ResourceHelper) CreateServiceIfNotExists(owner v1.Object, service *corev1.Service, reqLogger logr.Logger) error {
 	foundService := &corev1.Service{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: service.Name, Namespace: service.Namespace}, foundService)
 	if err != nil && k8sErrors.IsNotFound(err) {
@@ -120,7 +120,7 @@ func (r *ResourceCreator) CreateServiceIfNotExists(owner v1.Object, service *cor
 	return nil
 }
 
-func (r *ResourceCreator) CreateIngressIfNotExists(owner v1.Object, ingress *v1beta1.Ingress, reqLogger logr.Logger) error {
+func (r *ResourceHelper) CreateIngressIfNotExists(owner v1.Object, ingress *v1beta1.Ingress, reqLogger logr.Logger) error {
 	foundIngress := &v1beta1.Ingress{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: ingress.Name, Namespace: ingress.Namespace}, foundIngress)
 	if err != nil && k8sErrors.IsNotFound(err) {
@@ -133,7 +133,7 @@ func (r *ResourceCreator) CreateIngressIfNotExists(owner v1.Object, ingress *v1b
 	return nil
 }
 
-func (r *ResourceCreator) CreateDeploymentIfNotExists(owner v1.Object, deployment *appsv1.Deployment, reqLogger logr.Logger) error {
+func (r *ResourceHelper) CreateDeploymentIfNotExists(owner v1.Object, deployment *appsv1.Deployment, reqLogger logr.Logger) error {
 	foundDeployment := &appsv1.Deployment{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, foundDeployment)
 	if err != nil && k8sErrors.IsNotFound(err) {
@@ -146,7 +146,7 @@ func (r *ResourceCreator) CreateDeploymentIfNotExists(owner v1.Object, deploymen
 	return nil
 }
 
-func (r *ResourceCreator) CreateRoleIfNotExists(owner v1.Object, role *rbacv1.Role, reqLogger logr.Logger) error {
+func (r *ResourceHelper) CreateRoleIfNotExists(owner v1.Object, role *rbacv1.Role, reqLogger logr.Logger) error {
 	foundRole := &rbacv1.Role{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: role.Name, Namespace: role.Namespace}, foundRole)
 	if err != nil && k8sErrors.IsNotFound(err) {

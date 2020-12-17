@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/mattermost/mattermost-operator/pkg/resources"
+
 	rbacv1 "k8s.io/api/rbac/v1"
 
 	"github.com/go-logr/logr"
@@ -13,7 +15,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/api/networking/v1beta1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -233,7 +234,7 @@ func (r *ClusterInstallationReconciler) checkMattermostDeployment(mattermost *ma
 }
 
 func (r *ClusterInstallationReconciler) checkMattermostDBSetupJob(mattermost *mattermostv1alpha1.ClusterInstallation, deployment *appsv1.Deployment, reqLogger logr.Logger) error {
-	desiredJob := prepareJobTemplate(mattermost, deployment, mattermostApp.SetupJobName)
+	desiredJob := resources.PrepareMattermostJobTemplate(mattermostApp.SetupJobName, mattermost.Namespace, deployment)
 	desiredJob.OwnerReferences = mattermostApp.ClusterInstallationOwnerReference(mattermost)
 
 	currentJob := &batchv1.Job{}
@@ -296,83 +297,6 @@ func (r *ClusterInstallationReconciler) deleteMattermostResource(mattermost *mat
 	}
 
 	return nil
-}
-
-func (r *ClusterInstallationReconciler) launchUpdateJob(
-	mi *mattermostv1alpha1.ClusterInstallation,
-	deployment *appsv1.Deployment,
-) error {
-	job := prepareJobTemplate(mi, deployment, updateJobName)
-
-	err := r.Client.Create(context.TODO(), job)
-	if err != nil && !k8sErrors.IsAlreadyExists(err) {
-		return err
-	}
-
-	return nil
-}
-
-// restartUpdateJob removes existing update job if it exists and creates new one.
-func (r *ClusterInstallationReconciler) restartUpdateJob(
-	mi *mattermostv1alpha1.ClusterInstallation,
-	currentJob *batchv1.Job,
-	deployment *appsv1.Deployment,
-) error {
-	err := r.Client.Delete(context.TODO(), currentJob, k8sClient.PropagationPolicy(metav1.DeletePropagationBackground))
-	if err != nil && !k8sErrors.IsNotFound(err) {
-		return errors.Wrap(err, "failed to delete outdated update job")
-	}
-
-	job := prepareJobTemplate(mi, deployment, updateJobName)
-
-	err = r.Client.Create(context.TODO(), job)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func prepareJobTemplate(mm *mattermostv1alpha1.ClusterInstallation, deployment *appsv1.Deployment, name string) *batchv1.Job {
-	backoffLimit := int32(10)
-
-	job := &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: mm.GetNamespace(),
-		},
-		Spec: batchv1.JobSpec{
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"app": updateJobName},
-				},
-				Spec: *deployment.Spec.Template.Spec.DeepCopy(),
-			},
-			BackoffLimit: &backoffLimit,
-		},
-	}
-
-	// Remove init container that waits for db setup job.
-	containerToRemove, found := findContainer(mattermostApp.WaitForDBSetupContainerName, job.Spec.Template.Spec.InitContainers)
-	if found {
-		job.Spec.Template.Spec.InitContainers = append(
-			job.Spec.Template.Spec.InitContainers[:containerToRemove],
-			job.Spec.Template.Spec.InitContainers[containerToRemove+1:]...)
-	}
-
-	// We dont need to validate the readiness/liveness for this short lived job.
-	for i := range job.Spec.Template.Spec.Containers {
-		job.Spec.Template.Spec.Containers[i].LivenessProbe = nil
-		job.Spec.Template.Spec.Containers[i].ReadinessProbe = nil
-	}
-
-	// Override values for job-specific behavior.
-	job.Spec.Template.Spec.RestartPolicy = corev1.RestartPolicyNever
-	for i := range job.Spec.Template.Spec.Containers {
-		job.Spec.Template.Spec.Containers[i].Command = []string{"mattermost", "version"}
-	}
-
-	return job
 }
 
 // isMainDeploymentContainerImageSame checks whether main containers of specified deployments are the same or not.
@@ -466,13 +390,13 @@ func (r *ClusterInstallationReconciler) checkUpdateJob(
 	reqLogger logr.Logger,
 ) (*batchv1.Job, error) {
 	reqLogger.Info(fmt.Sprintf("Running Mattermost update image job check for image %s", mattermost.GetMattermostAppContainerFromDeployment(desired).Image))
-	job, err := r.fetchRunningUpdateJob(mattermost)
+	job, err := r.ResCreator.FetchMattermostUpdateJob(mattermost.Namespace)
 	if err != nil {
 		// Unable to fetch job
 		if k8sErrors.IsNotFound(err) {
 			// Job is not running, let's launch
 			reqLogger.Info("Launching update image job")
-			if err = r.launchUpdateJob(mattermost, desired); err != nil {
+			if err = r.ResCreator.LaunchMattermostUpdateJob(mattermost.Namespace, desired); err != nil {
 				return nil, errors.Wrap(err, "Launching update image job failed")
 			}
 			return nil, errors.New("Began update image job")
@@ -494,7 +418,7 @@ func (r *ClusterInstallationReconciler) checkUpdateJob(
 	}
 	if !isSameImage {
 		reqLogger.Info("Mattermost image changed, restarting update job")
-		err := r.restartUpdateJob(mattermost, job, desired)
+		err := r.ResCreator.RestartMattermostUpdateJob(job, desired)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to restart update job")
 		}
@@ -541,27 +465,4 @@ func (r *ClusterInstallationReconciler) cleanupUpdateJob(job *batchv1.Job, reqLo
 			reqLogger.Error(err, fmt.Sprintf("Problem deleting pod %s/%s", pod.Namespace, pod.Name))
 		}
 	}
-}
-
-// fetchRunningUpdateJob gets update job
-func (r *ClusterInstallationReconciler) fetchRunningUpdateJob(mi *mattermostv1alpha1.ClusterInstallation) (*batchv1.Job, error) {
-	job := &batchv1.Job{}
-	err := r.Client.Get(
-		context.TODO(),
-		types.NamespacedName{
-			Name:      updateJobName,
-			Namespace: mi.GetNamespace(),
-		},
-		job,
-	)
-	return job, err
-}
-
-func findContainer(name string, containers []corev1.Container) (int, bool) {
-	for i, cont := range containers {
-		if cont.Name == name {
-			return i, true
-		}
-	}
-	return -1, false
 }

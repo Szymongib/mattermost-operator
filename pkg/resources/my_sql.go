@@ -13,7 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *ResourceCreator) CreateMySQLClusterIfNotExists(owner v1.Object, cluster *mysqlOperator.MysqlCluster, reqLogger logr.Logger) error {
+func (r *ResourceHelper) CreateMySQLClusterIfNotExists(owner v1.Object, cluster *mysqlOperator.MysqlCluster, reqLogger logr.Logger) error {
 	foundCluster := &mysqlOperator.MysqlCluster{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, foundCluster)
 	if err != nil && k8sErrors.IsNotFound(err) {
@@ -27,7 +27,7 @@ func (r *ResourceCreator) CreateMySQLClusterIfNotExists(owner v1.Object, cluster
 	return nil
 }
 
-func (r *ResourceCreator) GetOrCreateMySQLSecrets(owner v1.Object, name string, reqLogger logr.Logger) (*corev1.Secret, error) {
+func (r *ResourceHelper) GetOrCreateMySQLSecrets(owner v1.Object, name string, reqLogger logr.Logger) (*corev1.Secret, error) {
 	var err error
 	dbSecret := &corev1.Secret{}
 
@@ -44,7 +44,7 @@ func (r *ResourceCreator) GetOrCreateMySQLSecrets(owner v1.Object, name string, 
 	return dbSecret, nil
 }
 
-func (r *ResourceCreator) createMySQLSecret(owner v1.Object, secretName string, reqLogger logr.Logger) (*corev1.Secret, error) {
+func (r *ResourceHelper) createMySQLSecret(owner v1.Object, secretName string, reqLogger logr.Logger) (*corev1.Secret, error) {
 	reqLogger.Info("Creating new mysql secret")
 
 	dbSecret := &corev1.Secret{}

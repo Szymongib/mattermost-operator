@@ -78,7 +78,7 @@ func TestCheckMattermost(t *testing.T) {
 	}
 
 	t.Run("service", func(t *testing.T) {
-		err = r.checkMattermostService(mm, mm.Name, mm.Name, logger)
+		err = r.checkMattermostService(mm, logger)
 		assert.NoError(t, err)
 
 		found := &corev1.Service{}
@@ -94,7 +94,7 @@ func TestCheckMattermost(t *testing.T) {
 
 		err = r.Client.Update(context.TODO(), modified)
 		require.NoError(t, err)
-		err = r.checkMattermostService(mm, mm.Name, mm.Name, logger)
+		err = r.checkMattermostService(mm, logger)
 		require.NoError(t, err)
 		err = r.Client.Get(context.TODO(), types.NamespacedName{Name: mmName, Namespace: mmNamespace}, found)
 		require.NoError(t, err)
@@ -105,7 +105,7 @@ func TestCheckMattermost(t *testing.T) {
 	})
 
 	t.Run("service account", func(t *testing.T) {
-		err = r.checkMattermostSA(mm, mm.Name, logger)
+		err = r.checkMattermostSA(mm, logger)
 		assert.NoError(t, err)
 
 		found := &corev1.ServiceAccount{}
@@ -115,14 +115,14 @@ func TestCheckMattermost(t *testing.T) {
 
 		err = r.Client.Delete(context.TODO(), found)
 		require.NoError(t, err)
-		err = r.checkMattermostSA(mm, mm.Name, logger)
+		err = r.checkMattermostSA(mm, logger)
 		require.NoError(t, err)
 		err = r.Client.Get(context.TODO(), types.NamespacedName{Name: mmName, Namespace: mmNamespace}, found)
 		require.NoError(t, err)
 	})
 
 	t.Run("role", func(t *testing.T) {
-		err = r.checkMattermostRole(mm, mm.Name, logger)
+		err = r.checkMattermostRole(mm, logger)
 		assert.NoError(t, err)
 
 		found := &rbacv1.Role{}
@@ -136,7 +136,7 @@ func TestCheckMattermost(t *testing.T) {
 
 		err = r.Client.Update(context.TODO(), modified)
 		require.NoError(t, err)
-		err = r.checkMattermostRole(mm, mm.Name, logger)
+		err = r.checkMattermostRole(mm, logger)
 		require.NoError(t, err)
 		err = r.Client.Get(context.TODO(), types.NamespacedName{Name: mmName, Namespace: mmNamespace}, found)
 		require.NoError(t, err)
@@ -146,7 +146,7 @@ func TestCheckMattermost(t *testing.T) {
 	})
 
 	t.Run("role binding", func(t *testing.T) {
-		err = r.checkMattermostRoleBinding(mm, mm.Name, mm.Name, logger)
+		err = r.checkMattermostRoleBinding(mm, logger)
 		assert.NoError(t, err)
 
 		found := &rbacv1.RoleBinding{}
@@ -160,7 +160,7 @@ func TestCheckMattermost(t *testing.T) {
 
 		err = r.Client.Update(context.TODO(), modified)
 		require.NoError(t, err)
-		err = r.checkMattermostRoleBinding(mm, mm.Name, mm.Name, logger)
+		err = r.checkMattermostRoleBinding(mm, logger)
 		require.NoError(t, err)
 		err = r.Client.Get(context.TODO(), types.NamespacedName{Name: mmName, Namespace: mmNamespace}, found)
 		require.NoError(t, err)
@@ -171,7 +171,7 @@ func TestCheckMattermost(t *testing.T) {
 
 	t.Run("ingress no tls", func(t *testing.T) {
 		mm.Spec.UseIngressTLS = false
-		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, logger)
+		err = r.checkMattermostIngress(mm, logger)
 		assert.NoError(t, err)
 
 		found := &v1beta1.Ingress{}
@@ -188,7 +188,7 @@ func TestCheckMattermost(t *testing.T) {
 
 		err = r.Client.Update(context.TODO(), modified)
 		require.NoError(t, err)
-		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, logger)
+		err = r.checkMattermostIngress(mm, logger)
 		require.NoError(t, err)
 		err = r.Client.Get(context.TODO(), types.NamespacedName{Name: mmName, Namespace: mmNamespace}, found)
 		require.NoError(t, err)
@@ -205,7 +205,7 @@ func TestCheckMattermost(t *testing.T) {
 			"test-ingress":                "blabla",
 		}
 
-		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, logger)
+		err = r.checkMattermostIngress(mm, logger)
 		assert.NoError(t, err)
 
 		found := &v1beta1.Ingress{}
@@ -224,7 +224,7 @@ func TestCheckMattermost(t *testing.T) {
 
 		err = r.Client.Update(context.TODO(), modified)
 		require.NoError(t, err)
-		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, logger)
+		err = r.checkMattermostIngress(mm, logger)
 		require.NoError(t, err)
 		err = r.Client.Get(context.TODO(), types.NamespacedName{Name: mmName, Namespace: mmNamespace}, found)
 		require.NoError(t, err)
@@ -331,7 +331,7 @@ func TestCheckMattermost(t *testing.T) {
 
 		// get new job, assert new image and change status to completed
 		restartedUpdateJob := batchv1.Job{}
-		updateJobKey := types.NamespacedName{Namespace: mm.GetNamespace(), Name: updateJobName}
+		updateJobKey := types.NamespacedName{Namespace: mm.GetNamespace(), Name: resources.UpdateJobName}
 		err = r.Client.Get(context.TODO(), updateJobKey, &restartedUpdateJob)
 		require.NoError(t, err)
 		assert.Equal(t, fmt.Sprintf("%s:%s", newImage, mm.Spec.Version), restartedUpdateJob.Spec.Template.Spec.Containers[0].Image)
@@ -428,7 +428,7 @@ func TestCheckMattermostExternalDBAndFileStore(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("service", func(t *testing.T) {
-		err = r.checkMattermostService(mm, mm.Name, mm.Name, logger)
+		err = r.checkMattermostService(mm, logger)
 		assert.NoError(t, err)
 
 		found := &corev1.Service{}
@@ -444,7 +444,7 @@ func TestCheckMattermostExternalDBAndFileStore(t *testing.T) {
 
 		err = r.Client.Update(context.TODO(), modified)
 		require.NoError(t, err)
-		err = r.checkMattermostService(mm, mm.Name, mm.Name, logger)
+		err = r.checkMattermostService(mm, logger)
 		require.NoError(t, err)
 		err = r.Client.Get(context.TODO(), types.NamespacedName{Name: mmName, Namespace: mmNamespace}, found)
 		require.NoError(t, err)
@@ -455,7 +455,7 @@ func TestCheckMattermostExternalDBAndFileStore(t *testing.T) {
 	})
 
 	t.Run("ingress", func(t *testing.T) {
-		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, logger)
+		err = r.checkMattermostIngress(mm, logger)
 		assert.NoError(t, err)
 
 		found := &v1beta1.Ingress{}
@@ -471,7 +471,7 @@ func TestCheckMattermostExternalDBAndFileStore(t *testing.T) {
 
 		err = r.Client.Update(context.TODO(), modified)
 		require.NoError(t, err)
-		err = r.checkMattermostIngress(mm, mm.Spec.IngressName, logger)
+		err = r.checkMattermostIngress(mm, logger)
 		require.NoError(t, err)
 		err = r.Client.Get(context.TODO(), types.NamespacedName{Name: mmName, Namespace: mmNamespace}, found)
 		require.NoError(t, err)

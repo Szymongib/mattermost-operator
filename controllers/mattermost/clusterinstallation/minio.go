@@ -58,7 +58,6 @@ func (r *ClusterInstallationReconciler) checkMinioSecret(mattermost *mattermostv
 	return r.checkMattermostMinioSecret(mattermost, reqLogger)
 }
 
-// TODO: change this
 func (r *ClusterInstallationReconciler) checkMinioInstance(mattermost *mattermostv1alpha1.ClusterInstallation, reqLogger logr.Logger) error {
 	desired := mattermostMinio.Instance(mattermost)
 

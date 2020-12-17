@@ -12,7 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *ResourceCreator) CreateMinioInstanceIfNotExists(owner v1.Object, instance *minioOperator.MinIOInstance, logger logr.Logger) error {
+func (r *ResourceHelper) CreateMinioInstanceIfNotExists(owner v1.Object, instance *minioOperator.MinIOInstance, logger logr.Logger) error {
 	foundInstance := &minioOperator.MinIOInstance{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, foundInstance)
 	if err != nil && kerrors.IsNotFound(err) {
@@ -26,7 +26,7 @@ func (r *ResourceCreator) CreateMinioInstanceIfNotExists(owner v1.Object, instan
 	return nil
 }
 
-func (r *ResourceCreator) CreateOrUpdateMinioSecret(owner v1.Object, desired *corev1.Secret, logger logr.Logger) error {
+func (r *ResourceHelper) CreateOrUpdateMinioSecret(owner v1.Object, desired *corev1.Secret, logger logr.Logger) error {
 	current := &corev1.Secret{}
 
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: desired.Namespace}, current)
@@ -52,7 +52,7 @@ func (r *ResourceCreator) CreateOrUpdateMinioSecret(owner v1.Object, desired *co
 	return r.Update(current, desired, logger)
 }
 
-func (r *ResourceCreator) createMinioSecret(owner v1.Object, desired *corev1.Secret, logger logr.Logger) error {
+func (r *ResourceHelper) createMinioSecret(owner v1.Object, desired *corev1.Secret, logger logr.Logger) error {
 	logger.Info("creating minio secret", "name", desired.Name, "namespace", desired.Namespace)
 	err := r.Create(owner, desired, logger)
 	if err != nil {

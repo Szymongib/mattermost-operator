@@ -34,7 +34,7 @@ type MattermostReconciler struct {
 	Scheme              *runtime.Scheme
 	MaxReconciling      int
 	RequeueOnLimitDelay time.Duration
-	ResCreator          *resources.ResourceCreator
+	ResCreator          *resources.ResourceHelper
 }
 
 func NewMattermostReconciler(mgr ctrl.Manager, maxReconciling int, requeueOnLimitDelay time.Duration) *MattermostReconciler {
@@ -127,19 +127,19 @@ func (r *MattermostReconciler) Reconcile(request ctrl.Request) (ctrl.Result, err
 		}
 	}
 
-	dbInfo, err := r.checkDatabase(mattermost, reqLogger)
+	dbConfig, err := r.checkDatabase(mattermost, reqLogger)
 	if err != nil {
 		r.setStateReconcilingAndLogError(mattermost, reqLogger)
 		return reconcile.Result{}, err
 	}
 
-	fileStoreInfo, err := r.checkFileStore(mattermost, reqLogger)
+	fileStoreConfig, err := r.checkFileStore(mattermost, reqLogger)
 	if err != nil {
 		r.setStateReconcilingAndLogError(mattermost, reqLogger)
 		return reconcile.Result{}, err
 	}
 
-	err = r.checkMattermost(mattermost, dbInfo, fileStoreInfo, reqLogger)
+	err = r.checkMattermost(mattermost, dbConfig, fileStoreConfig, reqLogger)
 	if err != nil {
 		r.setStateReconcilingAndLogError(mattermost, reqLogger)
 		return reconcile.Result{}, err
