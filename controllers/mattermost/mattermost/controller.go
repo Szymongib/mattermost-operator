@@ -34,7 +34,7 @@ type MattermostReconciler struct {
 	Scheme              *runtime.Scheme
 	MaxReconciling      int
 	RequeueOnLimitDelay time.Duration
-	ResCreator          *resources.ResourceHelper
+	Resources           *resources.ResourceHelper
 }
 
 func NewMattermostReconciler(mgr ctrl.Manager, maxReconciling int, requeueOnLimitDelay time.Duration) *MattermostReconciler {
@@ -45,7 +45,7 @@ func NewMattermostReconciler(mgr ctrl.Manager, maxReconciling int, requeueOnLimi
 		Scheme:              mgr.GetScheme(),
 		MaxReconciling:      maxReconciling,
 		RequeueOnLimitDelay: requeueOnLimitDelay,
-		ResCreator:          resources.NewResourceCreator(mgr.GetClient(), mgr.GetScheme()),
+		Resources:           resources.NewResourceHelper(mgr.GetClient(), mgr.GetScheme()),
 	}
 }
 

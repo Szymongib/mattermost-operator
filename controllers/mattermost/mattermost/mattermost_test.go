@@ -74,7 +74,7 @@ func TestCheckMattermost(t *testing.T) {
 		Scheme:         s,
 		Log:            logger,
 		MaxReconciling: 5,
-		ResCreator:     resources.NewResourceCreator(c, s),
+		Resources:      resources.NewResourceHelper(c, s),
 	}
 
 	t.Run("service", func(t *testing.T) {
@@ -412,7 +412,7 @@ func TestCheckMattermostExternalDBAndFileStore(t *testing.T) {
 		Scheme:         s,
 		Log:            logger,
 		MaxReconciling: 5,
-		ResCreator:     resources.NewResourceCreator(c, s),
+		Resources:      resources.NewResourceHelper(c, s),
 	}
 
 	externalDBSecret := &corev1.Secret{

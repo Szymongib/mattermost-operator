@@ -58,7 +58,7 @@ func TestCheckMattermost(t *testing.T) {
 		Scheme:         s,
 		Log:            logger,
 		MaxReconciling: 5,
-		ResCreator:     resources.NewResourceCreator(c, s),
+		Resources:      resources.NewResourceHelper(c, s),
 	}
 
 	err := prepAllDependencyTestResources(r.Client, ci)
@@ -384,7 +384,7 @@ func TestCheckMattermostExternalDB(t *testing.T) {
 		Scheme:              s,
 		MaxReconciling:      5,
 		RequeueOnLimitDelay: 0,
-		ResCreator:          resources.NewResourceCreator(c, s),
+		Resources:           resources.NewResourceHelper(c, s),
 	}
 
 	err := prepAllDependencyTestResources(r.Client, ci)

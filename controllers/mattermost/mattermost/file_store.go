@@ -57,7 +57,7 @@ func (r *MattermostReconciler) checkOperatorManagedMinio(mattermost *mattermostv
 
 func (r *MattermostReconciler) checkMattermostMinioSecret(mattermost *mattermostv1beta1.Mattermost, logger logr.Logger) (*corev1.Secret, error) {
 	desired := mattermostMinio.SecretV1Beta(mattermost)
-	err := r.ResCreator.CreateOrUpdateMinioSecret(mattermost, desired, logger)
+	err := r.Resources.CreateOrUpdateMinioSecret(mattermost, desired, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create or update Minio Secret")
 	}
@@ -67,7 +67,7 @@ func (r *MattermostReconciler) checkMattermostMinioSecret(mattermost *mattermost
 func (r *MattermostReconciler) checkMinioInstance(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error {
 	desired := mattermostMinio.InstanceV1Beta(mattermost)
 
-	err := r.ResCreator.CreateMinioInstanceIfNotExists(mattermost, desired, reqLogger)
+	err := r.Resources.CreateMinioInstanceIfNotExists(mattermost, desired, reqLogger)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (r *MattermostReconciler) checkMinioInstance(mattermost *mattermostv1beta1.
 	// For some reason, our current minio operator seems to remove labels on
 	// the instance resource when we add them. For that reason, trying to
 	// ensure the labels are correct doesn't work.
-	return r.ResCreator.Update(current, desired, reqLogger)
+	return r.Resources.Update(current, desired, reqLogger)
 }
 
 func (r *MattermostReconciler) getMinioService(mattermost *mattermostv1beta1.Mattermost) (string, error) {

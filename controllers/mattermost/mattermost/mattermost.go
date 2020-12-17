@@ -68,7 +68,7 @@ func (r *MattermostReconciler) checkLicence(mattermost *mattermostv1beta1.Matter
 func (r *MattermostReconciler) checkMattermostService(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error {
 	desired := mattermostApp.GenerateServiceV1Beta(mattermost)
 
-	err := r.ResCreator.CreateServiceIfNotExists(mattermost, desired, reqLogger)
+	err := r.Resources.CreateServiceIfNotExists(mattermost, desired, reqLogger)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (r *MattermostReconciler) checkMattermostService(mattermost *mattermostv1be
 		return err
 	}
 
-	return r.ResCreator.Update(current, desired, reqLogger)
+	return r.Resources.Update(current, desired, reqLogger)
 }
 
 func (r *MattermostReconciler) checkMattermostRBAC(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error {
@@ -101,7 +101,7 @@ func (r *MattermostReconciler) checkMattermostRBAC(mattermost *mattermostv1beta1
 
 func (r *MattermostReconciler) checkMattermostSA(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error {
 	desired := mattermostApp.GenerateServiceAccountV1Beta(mattermost, mattermost.Name)
-	err := r.ResCreator.CreateServiceAccountIfNotExists(mattermost, desired, reqLogger)
+	err := r.Resources.CreateServiceAccountIfNotExists(mattermost, desired, reqLogger)
 	if err != nil {
 		return err
 	}
@@ -112,12 +112,12 @@ func (r *MattermostReconciler) checkMattermostSA(mattermost *mattermostv1beta1.M
 		return err
 	}
 
-	return r.ResCreator.Update(current, desired, reqLogger)
+	return r.Resources.Update(current, desired, reqLogger)
 }
 
 func (r *MattermostReconciler) checkMattermostRole(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error {
 	desired := mattermostApp.GenerateRoleV1Beta(mattermost, mattermost.Name)
-	err := r.ResCreator.CreateRoleIfNotExists(mattermost, desired, reqLogger)
+	err := r.Resources.CreateRoleIfNotExists(mattermost, desired, reqLogger)
 	if err != nil {
 		return err
 	}
@@ -128,12 +128,12 @@ func (r *MattermostReconciler) checkMattermostRole(mattermost *mattermostv1beta1
 		return err
 	}
 
-	return r.ResCreator.Update(current, desired, reqLogger)
+	return r.Resources.Update(current, desired, reqLogger)
 }
 
 func (r *MattermostReconciler) checkMattermostRoleBinding(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error {
 	desired := mattermostApp.GenerateRoleBindingV1Beta(mattermost, mattermost.Name, mattermost.Name)
-	err := r.ResCreator.CreateRoleBindingIfNotExists(mattermost, desired, reqLogger)
+	err := r.Resources.CreateRoleBindingIfNotExists(mattermost, desired, reqLogger)
 	if err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func (r *MattermostReconciler) checkMattermostRoleBinding(mattermost *mattermost
 		return err
 	}
 
-	return r.ResCreator.Update(current, desired, reqLogger)
+	return r.Resources.Update(current, desired, reqLogger)
 }
 
 func (r *MattermostReconciler) checkMattermostIngress(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error {
@@ -159,7 +159,7 @@ func (r *MattermostReconciler) checkMattermostIngress(mattermost *mattermostv1be
 
 	desired := mattermostApp.GenerateIngressV1Beta(mattermost, mattermost.Name, ingressHost, ingressAnnotations)
 
-	err := r.ResCreator.CreateIngressIfNotExists(mattermost, desired, reqLogger)
+	err := r.Resources.CreateIngressIfNotExists(mattermost, desired, reqLogger)
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func (r *MattermostReconciler) checkMattermostIngress(mattermost *mattermostv1be
 		return err
 	}
 
-	return r.ResCreator.Update(current, desired, reqLogger)
+	return r.Resources.Update(current, desired, reqLogger)
 }
 
 func (r *MattermostReconciler) checkMattermostDeployment(
@@ -196,7 +196,7 @@ func (r *MattermostReconciler) checkMattermostDeployment(
 	//	return errors.Wrap(err, "failed to check mattermost DB setup job")
 	//}
 
-	err := r.ResCreator.CreateDeploymentIfNotExists(mattermost, desired, reqLogger)
+	err := r.Resources.CreateDeploymentIfNotExists(mattermost, desired, reqLogger)
 	if err != nil {
 		return errors.Wrap(err, "failed to create mattermost deployment")
 	}
@@ -224,7 +224,7 @@ func (r *MattermostReconciler) checkMattermostDBSetupJob(mattermost *mattermostv
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
 			reqLogger.Info("Creating DB setup job", "name", desiredJob.Name)
-			return r.ResCreator.Create(mattermost, desiredJob, reqLogger)
+			return r.Resources.Create(mattermost, desiredJob, reqLogger)
 		}
 		return errors.Wrap(err, "failed to get current db setup job")
 	}
@@ -287,7 +287,7 @@ func (r *MattermostReconciler) updateMattermostDeployment(
 
 	if sameImage {
 		// Need to update other fields only, update job is not required
-		return r.ResCreator.Update(current, desired, reqLogger)
+		return r.Resources.Update(current, desired, reqLogger)
 	}
 
 	// Image is not the same
@@ -309,7 +309,7 @@ func (r *MattermostReconciler) updateMattermostDeployment(
 
 	// Job completed successfully
 
-	return r.ResCreator.Update(current, desired, reqLogger)
+	return r.Resources.Update(current, desired, reqLogger)
 }
 
 // checkUpdateJob checks whether update job status. In case job is not running it is launched
@@ -319,11 +319,11 @@ func (r *MattermostReconciler) checkUpdateJob(
 	reqLogger logr.Logger,
 ) (*batchv1.Job, error) {
 	reqLogger.Info(fmt.Sprintf("Running Mattermost update image job check for image %s", mattermostv1beta1.GetMattermostAppContainerFromDeployment(baseDeployment).Image))
-	job, err := r.ResCreator.FetchMattermostUpdateJob(jobNamespace)
+	job, err := r.Resources.FetchMattermostUpdateJob(jobNamespace)
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
 			reqLogger.Info("Launching update image job")
-			if err = r.ResCreator.LaunchMattermostUpdateJob(jobNamespace, baseDeployment); err != nil {
+			if err = r.Resources.LaunchMattermostUpdateJob(jobNamespace, baseDeployment); err != nil {
 				return nil, errors.Wrap(err, "Launching update image job failed")
 			}
 			return nil, errors.New("Began update image job")
@@ -344,7 +344,7 @@ func (r *MattermostReconciler) checkUpdateJob(
 	}
 	if !isSameImage {
 		reqLogger.Info("Mattermost image changed, restarting update job")
-		err := r.ResCreator.RestartMattermostUpdateJob(job, baseDeployment)
+		err := r.Resources.RestartMattermostUpdateJob(job, baseDeployment)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to restart update job")
 		}

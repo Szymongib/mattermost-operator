@@ -36,7 +36,7 @@ type ClusterInstallationReconciler struct {
 	Scheme              *runtime.Scheme
 	MaxReconciling      int
 	RequeueOnLimitDelay time.Duration
-	ResCreator          *resources.ResourceHelper
+	Resources           *resources.ResourceHelper
 }
 
 // +kubebuilder:rbac:groups=mattermost.com,resources=clusterinstallations,verbs=get;list;watch;create;update;patch;delete

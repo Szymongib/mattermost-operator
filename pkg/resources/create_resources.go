@@ -31,12 +31,13 @@ type Object interface {
 	v1.Object
 }
 
+// ResourceHelper provides helper methods to create, updated and fetch different resources.
 type ResourceHelper struct {
 	client client.Client
 	scheme *runtime.Scheme
 }
 
-func NewResourceCreator(client client.Client, scheme *runtime.Scheme) *ResourceHelper {
+func NewResourceHelper(client client.Client, scheme *runtime.Scheme) *ResourceHelper {
 	return &ResourceHelper{
 		client: client,
 		scheme: scheme,

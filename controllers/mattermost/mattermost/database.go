@@ -62,7 +62,7 @@ func (r *MattermostReconciler) checkOperatorManagedMySQL(mattermost *mattermostv
 
 	dbSecretName := mattermostmysql.DefaultDatabaseSecretName(mattermost.Name)
 
-	dbSecret, err := r.ResCreator.GetOrCreateMySQLSecrets(mattermost, dbSecretName, reqLogger)
+	dbSecret, err := r.Resources.GetOrCreateMySQLSecrets(mattermost, dbSecretName, reqLogger)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get or create MySQL database secret")
 	}
@@ -73,7 +73,7 @@ func (r *MattermostReconciler) checkOperatorManagedMySQL(mattermost *mattermostv
 func (r *MattermostReconciler) checkMySQLCluster(mattermost *mattermostv1beta1.Mattermost, reqLogger logr.Logger) error {
 	desired := mattermostmysql.ClusterV1Beta(mattermost)
 
-	err := r.ResCreator.CreateMySQLClusterIfNotExists(mattermost, desired, reqLogger)
+	err := r.Resources.CreateMySQLClusterIfNotExists(mattermost, desired, reqLogger)
 	if err != nil {
 		return err
 	}
@@ -83,5 +83,5 @@ func (r *MattermostReconciler) checkMySQLCluster(mattermost *mattermostv1beta1.M
 		return err
 	}
 
-	return r.ResCreator.Update(current, desired, reqLogger)
+	return r.Resources.Update(current, desired, reqLogger)
 }

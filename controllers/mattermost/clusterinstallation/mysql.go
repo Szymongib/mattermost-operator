@@ -19,7 +19,7 @@ func (r *ClusterInstallationReconciler) checkMySQLCluster(mattermost *mattermost
 	reqLogger = reqLogger.WithValues("Reconcile", "mysql")
 	desired := mattermostmysql.Cluster(mattermost)
 
-	err := r.ResCreator.CreateMySQLClusterIfNotExists(mattermost, desired, reqLogger)
+	err := r.Resources.CreateMySQLClusterIfNotExists(mattermost, desired, reqLogger)
 	if err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func (r *ClusterInstallationReconciler) checkMySQLCluster(mattermost *mattermost
 		return err
 	}
 
-	return r.ResCreator.Update(current, desired, reqLogger)
+	return r.Resources.Update(current, desired, reqLogger)
 }
 
 func (r *ClusterInstallationReconciler) getOrCreateMySQLSecrets(mattermost *mattermostv1alpha1.ClusterInstallation, reqLogger logr.Logger) (*database.Info, error) {
@@ -51,7 +51,7 @@ func (r *ClusterInstallationReconciler) getOrCreateMySQLSecrets(mattermost *matt
 		return dbInfo, dbInfo.IsValid()
 	}
 
-	dbSecret, err = r.ResCreator.GetOrCreateMySQLSecrets(mattermost, dbSecretName, reqLogger)
+	dbSecret, err = r.Resources.GetOrCreateMySQLSecrets(mattermost, dbSecretName, reqLogger)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get or create MySQL secret")
 	}
