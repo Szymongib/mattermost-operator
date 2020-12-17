@@ -54,7 +54,11 @@ func (hc *HealthChecker) CheckPodsRolledOut(desiredImage string) (PodRolloutStat
 
 	for _, pod := range pods.Items {
 		if pod.Status.Phase != corev1.PodRunning || pod.DeletionTimestamp != nil {
-			hc.logger.Info("mattermost pod %s is in state '%s'", pod.Name, pod.Status.Phase)
+			if pod.DeletionTimestamp != nil {
+				hc.logger.Info(fmt.Sprintf("mattermost pod not terminated: pod %s is in state '%s'", pod.Name, pod.Status.Phase))
+				continue
+			}
+			hc.logger.Info(fmt.Sprintf("mattermost pod not ready: pod %s is in state '%s'", pod.Name, pod.Status.Phase))
 			continue
 		}
 		if len(pod.Spec.Containers) == 0 {

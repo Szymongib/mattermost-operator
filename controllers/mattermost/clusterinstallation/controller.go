@@ -77,11 +77,14 @@ func (r *ClusterInstallationReconciler) Reconcile(request ctrl.Request) (ctrl.Re
 		return reconcile.Result{}, err
 	}
 
-	// TODO: cleanup
+	//// TODO: cleanup
 	//var existingMM mattermostv1beta1.Mattermost
 	//err = r.Get(context.Background(), request.NamespacedName, &existingMM)
 	//if err != nil && !k8sErrors.IsNotFound(err) {
 	//	return ctrl.Result{}, err
+	//}
+	//if err == nil {
+	//	return ctrl.Result{}, nil
 	//}
 	//
 	//mm, err := r.ConvertToMM(mattermost)

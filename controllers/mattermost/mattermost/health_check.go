@@ -49,11 +49,11 @@ func (r *MattermostReconciler) checkMattermostHealth(mattermost *mattermostv1bet
 		replicas = *mattermost.Spec.Replicas
 	}
 
-	if podsStatus.Replicas != replicas {
-		return status, fmt.Errorf("found %d pods, but wanted %d", podsStatus.Replicas, replicas)
-	}
 	if podsStatus.UpdatedReplicas != replicas {
 		return status, fmt.Errorf("found %d updated replicas, but wanted %d", podsStatus.UpdatedReplicas, replicas)
+	}
+	if podsStatus.Replicas != replicas {
+		return status, fmt.Errorf("found %d pods, but wanted %d", podsStatus.Replicas, replicas)
 	}
 
 	status.Image = mattermost.Spec.Image
