@@ -27,6 +27,8 @@ const (
 	DefaultFilestoreStorageSize = "50Gi"
 	// DefaultStorageSize is the default Storage size for the Database
 	DefaultStorageSize = "50Gi"
+	// DefaultPullPolicy is the default Pull Policy used by Mattermost deployment
+	DefaultPullPolicy = corev1.PullIfNotPresent
 
 	// TODO: we should consider updating label to something like "v1beta1.installation.mattermost.com/mattermost"
 	// but this may cause some issues on existing clusters
@@ -52,6 +54,9 @@ func (mm *Mattermost) SetDefaults() error {
 	}
 	if mm.Spec.Version == "" {
 		mm.Spec.Version = DefaultMattermostVersion
+	}
+	if mm.Spec.ImagePullPolicy == "" {
+		mm.Spec.ImagePullPolicy = DefaultPullPolicy
 	}
 
 	mm.Spec.FileStore.SetDefaults()

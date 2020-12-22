@@ -34,6 +34,7 @@ func (r *ClusterInstallationReconciler) ConvertToMM(ci *mattermostv1alpha1.Clust
 			UseServiceLoadBalancer: ci.Spec.UseServiceLoadBalancer,
 			ServiceAnnotations:     ci.Spec.ServiceAnnotations,
 			ResourceLabels:         ci.Spec.ResourceLabels,
+			ImagePullPolicy:        ci.Spec.ImagePullPolicy,
 			FileStore:              convertFileStore(ci),
 			ElasticSearch:          convertElasticSearch(ci.Spec.ElasticSearch),
 			Scheduling:             convertScheduling(ci.Spec),
