@@ -33,11 +33,11 @@ const (
 	// TODO: we should consider updating label to something like "v1beta1.installation.mattermost.com/mattermost"
 	// but this may cause some issues on existing clusters
 	// ClusterLabel is the label applied across all components
-	ClusterLabel = "v1alpha1.mattermost.com/installation"
+	ClusterLabel = "installation.mattermost.com/installation"
 
 	// ClusterResourceLabel is the label applied to a given Mattermost
 	// as well as all other resources created to support it.
-	ClusterResourceLabel = "v1alpha1.mattermost.com/resource"
+	ClusterResourceLabel = "installation.mattermost.com/resource"
 
 	// MattermostAppContainerName is the name of the container which runs the
 	// Mattermost application

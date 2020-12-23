@@ -28,10 +28,10 @@ const (
 	DefaultPullPolicy = corev1.PullIfNotPresent
 
 	// ClusterLabel is the label applied across all compoments
-	ClusterLabel = "installation.mattermost.com/installation"
-	// ClusterResourceLabel is the label applied to a given ClusterInstallation
+	ClusterLabel = "v1alpha1.mattermost.com/installation"
+	// ClusterResourceLabel is the label applied to a given Mattermost
 	// as well as all other resources created to support it.
-	ClusterResourceLabel = "installation.mattermost.com/resource"
+	ClusterResourceLabel = "v1alpha1.mattermost.com/resource"
 
 	// BlueName is the name of the blue Mattermmost installation in a blue/green
 	// deployment type.
