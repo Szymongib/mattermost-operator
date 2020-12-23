@@ -27,7 +27,7 @@ const (
 	DefaultFilestoreStorageSize = "50Gi"
 	// DefaultStorageSize is the default Storage size for the Database
 	DefaultStorageSize = "50Gi"
-	// DefaultPullPolicy is the default Pull Policy used by Mattermost deployment
+	// DefaultPullPolicy is the default Pull Policy used by Mattermost app container
 	DefaultPullPolicy = corev1.PullIfNotPresent
 
 	// TODO: we should consider updating label to something like "v1beta1.installation.mattermost.com/mattermost"

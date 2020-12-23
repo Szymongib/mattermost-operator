@@ -2,7 +2,6 @@ package clusterinstallation
 
 import (
 	"context"
-
 	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
 	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 	"github.com/mattermost/mattermost-operator/pkg/database"
@@ -12,6 +11,20 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
+
+// TODO: should return error when some unconvertable features? + Update status - or possibly different function to validated the migration
+
+func (r *ClusterInstallationReconciler) IsConvertible(ci *mattermostv1alpha1.ClusterInstallation) error {
+	if ci.Spec.BlueGreen.Enable {
+		return errors.New("cluster installation with BlueGreen enabled cannot be converted to Mattermost")
+	}
+
+	if ci.Spec.Canary.Enable {
+		return errors.New("cluster installation with Canary enabled cannot be converted to Mattermost")
+	}
+
+	return nil
+}
 
 func (r *ClusterInstallationReconciler) ConvertToMM(ci *mattermostv1alpha1.ClusterInstallation) (*mattermostv1beta1.Mattermost, error) {
 	mattermost := &mattermostv1beta1.Mattermost{

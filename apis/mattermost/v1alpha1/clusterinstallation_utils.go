@@ -24,7 +24,7 @@ const (
 	DefaultMinioStorageSize = "50Gi"
 	// DefaultStorageSize is the default Storage size for the Database
 	DefaultStorageSize = "50Gi"
-	// DefaultPullPolicy is ifNotPresetnt
+	// DefaultPullPolicy is ifNotPresent
 	DefaultPullPolicy = corev1.PullIfNotPresent
 
 	// ClusterLabel is the label applied across all compoments
