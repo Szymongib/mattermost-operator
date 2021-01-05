@@ -1337,7 +1337,12 @@ spec:
                 type: string
               migration:
                 description: The status of migration to Mattermost CR.
-                type: string
+                properties:
+                  error:
+                    type: string
+                  status:
+                    type: string
+                type: object
               replicas:
                 description: Total number of non-terminated pods targeted by this
                   Mattermost deployment

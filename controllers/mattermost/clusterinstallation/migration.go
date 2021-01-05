@@ -3,6 +3,8 @@ package clusterinstallation
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/go-logr/logr"
 	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
 	mmv1beta "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
@@ -13,7 +15,6 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 )
 
 type MigrationResult struct {
@@ -42,7 +43,8 @@ func (r *ClusterInstallationReconciler) HandleMigration(ci *mattermostv1alpha1.C
 		return MigrationResult{}, errors.Wrap(err, "failed to check if Mattermost CR exists")
 	}
 	if k8sErrors.IsNotFound(err) {
-		finished, err := r.initializeMigration(ci, logger)
+		finished := false
+		finished, err = r.initializeMigration(ci, logger)
 		if err != nil {
 			return MigrationResult{}, errors.Wrap(err, "failed to initialize migration")
 		}
@@ -157,7 +159,7 @@ func (r *ClusterInstallationReconciler) recreateDeployment(mm *mmv1beta.Mattermo
 }
 
 func (r *ClusterInstallationReconciler) waitForDeploymentDeletion(name types.NamespacedName, logger logr.Logger) error {
-	timeout := time.After(1*time.Minute)
+	timeout := time.After(1 * time.Minute)
 
 	for {
 		var deployment appsv1.Deployment
@@ -175,7 +177,7 @@ func (r *ClusterInstallationReconciler) waitForDeploymentDeletion(name types.Nam
 		case <-timeout:
 			return fmt.Errorf("timeout waiting for deployment deletion")
 		default:
-			time.Sleep(2*time.Second)
+			time.Sleep(2 * time.Second)
 		}
 	}
 }

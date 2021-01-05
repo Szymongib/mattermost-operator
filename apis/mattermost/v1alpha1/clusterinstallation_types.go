@@ -296,7 +296,7 @@ type ClusterInstallationStatus struct {
 
 type MigrationStatus struct {
 	Status string `json:"status,omitempty"`
-	Error string `json:"error,omitempty"`
+	Error  string `json:"error,omitempty"`
 }
 
 // +genclient

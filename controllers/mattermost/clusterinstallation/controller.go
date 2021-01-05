@@ -216,7 +216,7 @@ func (r *ClusterInstallationReconciler) tryToMigrate(mattermost *mattermostv1alp
 	if err != nil {
 		status := mattermost.Status
 		status.Migration = &mattermostv1alpha1.MigrationStatus{
-			Error:  err.Error(),
+			Error: err.Error(),
 		}
 		statusErr := r.updateStatus(mattermost, status, reqLogger)
 		if statusErr != nil {

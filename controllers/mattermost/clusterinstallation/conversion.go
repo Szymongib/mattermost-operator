@@ -2,6 +2,7 @@ package clusterinstallation
 
 import (
 	"context"
+
 	mattermostv1alpha1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1alpha1"
 	mattermostv1beta1 "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 	"github.com/mattermost/mattermost-operator/pkg/database"
@@ -106,8 +107,6 @@ func (r *ClusterInstallationReconciler) convertDatabase(ci *mattermostv1alpha1.C
 	}
 
 	if !dbInfo.IsExternal() {
-		// TODO: I should recreate Secret with the default name for it to work
-
 		return convertToOperatorManagedDB(ci), nil
 	}
 

@@ -2,9 +2,10 @@ package clusterinstallation
 
 import (
 	"fmt"
-	mmv1beta "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 	"testing"
 	"time"
+
+	mmv1beta "github.com/mattermost/mattermost-operator/apis/mattermost/v1beta1"
 
 	"github.com/mattermost/mattermost-operator/pkg/resources"
 
@@ -644,11 +645,13 @@ func TestMigration(t *testing.T) {
 	logger = logger.WithName("test.opr")
 	logf.SetLogger(logger)
 
+	var res reconcile.Result
+
 	ciName := "test-installation"
 	ciNamespace := "default"
 	replicas := int32(1)
 	requeueOnLimitDelay := 35 * time.Second
-	ci := &mattermostv1alpha1.ClusterInstallation{
+	ci1 := &mattermostv1alpha1.ClusterInstallation{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ciName,
 			Namespace: ciNamespace,
@@ -665,7 +668,7 @@ func TestMigration(t *testing.T) {
 
 	// Register operator types with the runtime scheme.
 	s := prepareSchema(t, scheme.Scheme)
-	s.AddKnownTypes(mattermostv1alpha1.GroupVersion, ci)
+	s.AddKnownTypes(mattermostv1alpha1.GroupVersion, ci1)
 	s.AddKnownTypes(mmv1beta.GroupVersion, &mmv1beta.Mattermost{})
 	// Create a fake client to mock API calls.
 	c := fake.NewFakeClient()
@@ -689,27 +692,27 @@ func TestMigration(t *testing.T) {
 	}
 
 	t.Run("cannot perform migration with blue-green", func(t *testing.T) {
-		ci := ci.DeepCopy()
+		ci := ci1.DeepCopy()
 		ci.Name = "blue-green-test"
 		ci.Spec.BlueGreen = mattermostv1alpha1.BlueGreen{Enable: true}
 
 		err := c.Create(context.Background(), ci)
 		require.NoError(t, err)
 
-		res, err := r.Reconcile(requestForCI(ci))
+		res, err = r.Reconcile(requestForCI(ci))
 		require.NoError(t, err)
 		assert.Equal(t, time.Duration(0), res.RequeueAfter)
 
 		assertMigrationStatus(ci.Name, "Migration to Mattermost cannot be performed safely")
 	})
 
-	err := c.Create(context.Background(), ci)
+	err := c.Create(context.Background(), ci1)
 	require.NoError(t, err)
 
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{Name: ciName, Namespace: ciNamespace},
 		Spec: appsv1.DeploymentSpec{
-			Selector: &metav1.LabelSelector{MatchLabels: mattermostv1alpha1.ClusterInstallationSelectorLabels(ci.Name)},
+			Selector: &metav1.LabelSelector{MatchLabels: mattermostv1alpha1.ClusterInstallationSelectorLabels(ci1.Name)},
 		},
 	}
 
@@ -717,28 +720,28 @@ func TestMigration(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("start deployment migration", func(t *testing.T) {
-		res, err := r.Reconcile(requestForCI(ci))
+		res, err = r.Reconcile(requestForCI(ci1))
 		require.NoError(t, err)
 		assert.Equal(t, 10*time.Second, res.RequeueAfter)
-		assertMigrationStatus(ci.Name, "Migration to Mattermost is in progress - recreating deployment")
+		assertMigrationStatus(ci1.Name, "Migration to Mattermost is in progress - recreating deployment")
 
 		var deployment appsv1.Deployment
-		err = c.Get(context.Background(), namespacedNameForCI(ci), &deployment)
+		err = c.Get(context.Background(), namespacedNameForCI(ci1), &deployment)
 		require.NoError(t, err)
 
-		assert.Equal(t, mmv1beta.MattermostSelectorLabels(ci.Name), deployment.Spec.Selector.MatchLabels)
+		assert.Equal(t, mmv1beta.MattermostSelectorLabels(ci1.Name), deployment.Spec.Selector.MatchLabels)
 	})
 
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ciName,
 			Namespace: ciNamespace,
-			Labels:    (&mmv1beta.Mattermost{}).MattermostLabels(ci.Name),
+			Labels:    (&mmv1beta.Mattermost{}).MattermostLabels(ci1.Name),
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					Image: ci.GetImageName(),
+					Image: ci1.GetImageName(),
 				},
 			},
 		},
@@ -757,24 +760,24 @@ func TestMigration(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("create Mattermost and delete CI", func(t *testing.T) {
-		res, err := r.Reconcile(requestForCI(ci))
+		res, err = r.Reconcile(requestForCI(ci1))
 		require.NoError(t, err)
 		assert.Equal(t, 10*time.Second, res.RequeueAfter)
-		assertMigrationStatus(ci.Name, "Migration to Mattermost is in progress - waiting for Mattermost to be ready")
+		assertMigrationStatus(ci1.Name, "Migration to Mattermost is in progress - waiting for Mattermost to be ready")
 
 		var mm mmv1beta.Mattermost
-		err = c.Get(context.Background(), namespacedNameForCI(ci), &mm)
+		err = c.Get(context.Background(), namespacedNameForCI(ci1), &mm)
 		require.NoError(t, err)
 
 		mm.Status.State = mmv1beta.Stable
 		err = c.Update(context.Background(), &mm)
 		require.NoError(t, err)
 
-		res, err = r.Reconcile(requestForCI(ci))
+		res, err = r.Reconcile(requestForCI(ci1))
 		require.NoError(t, err)
 		assert.Equal(t, 0*time.Second, res.RequeueAfter)
 
-		err = r.Get(context.Background(), namespacedNameForCI(ci), ci)
+		err = r.Get(context.Background(), namespacedNameForCI(ci1), ci1)
 		assert.True(t, k8sErrors.IsNotFound(err))
 	})
 }
