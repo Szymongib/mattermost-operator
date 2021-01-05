@@ -30,8 +30,6 @@ const (
 	// DefaultPullPolicy is the default Pull Policy used by Mattermost app container
 	DefaultPullPolicy = corev1.PullIfNotPresent
 
-	// TODO: we should consider updating label to something like "v1beta1.installation.mattermost.com/mattermost"
-	// but this may cause some issues on existing clusters
 	// ClusterLabel is the label applied across all components
 	ClusterLabel = "installation.mattermost.com/installation"
 
