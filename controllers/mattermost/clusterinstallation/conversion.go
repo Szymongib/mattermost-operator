@@ -12,8 +12,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// TODO: should return error when some unconvertable features? + Update status - or possibly different function to validated the migration
-
 func (r *ClusterInstallationReconciler) IsConvertible(ci *mattermostv1alpha1.ClusterInstallation) error {
 	if ci.Spec.BlueGreen.Enable {
 		return errors.New("cluster installation with BlueGreen enabled cannot be converted to Mattermost")

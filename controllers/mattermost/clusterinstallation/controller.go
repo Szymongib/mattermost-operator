@@ -214,6 +214,14 @@ func (r *ClusterInstallationReconciler) checkDatabase(mattermost *mattermostv1al
 func (r *ClusterInstallationReconciler) tryToMigrate(mattermost *mattermostv1alpha1.ClusterInstallation, reqLogger logr.Logger) (reconcile.Result, error) {
 	res, err := r.HandleMigration(mattermost, reqLogger)
 	if err != nil {
+		status := mattermost.Status
+		status.Migration = &mattermostv1alpha1.MigrationStatus{
+			Error:  err.Error(),
+		}
+		statusErr := r.updateStatus(mattermost, status, reqLogger)
+		if statusErr != nil {
+			reqLogger.Error(statusErr, "Error updating status")
+		}
 		return ctrl.Result{}, err
 	}
 	if res.Finished {
@@ -222,7 +230,9 @@ func (r *ClusterInstallationReconciler) tryToMigrate(mattermost *mattermostv1alp
 	}
 
 	status := mattermost.Status
-	status.Migration = res.Status
+	status.Migration = &mattermostv1alpha1.MigrationStatus{
+		Status: res.Status,
+	}
 	err = r.updateStatus(mattermost, status, reqLogger)
 	if err != nil {
 		return ctrl.Result{}, err

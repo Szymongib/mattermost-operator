@@ -63,9 +63,13 @@ func (r *ClusterInstallationReconciler) HandleMigration(ci *mattermostv1alpha1.C
 		}, nil
 	}
 
-	logger.Info("Migration finished. Removing ClusterInstallation")
-	err = r.Client.Delete(context.Background(), ci)
+	logger.Info("Migration finished. Removing old Replica Sets and ClusterInstallation")
+	err = r.cleanupReplicaSets(ci)
 	if err != nil {
+		return MigrationResult{}, errors.Wrap(err, "failed to cleanup old Replica Sets")
+	}
+	err = r.Client.Delete(context.Background(), ci)
+	if err != nil && !k8sErrors.IsNotFound(err) {
 		return MigrationResult{}, errors.Wrap(err, "failed to cleanup Cluster Installation")
 	}
 
@@ -87,7 +91,7 @@ func (r *ClusterInstallationReconciler) initializeMigration(ci *mattermostv1alph
 
 	if !isMigrated {
 		logger.Info("Deployment is not migrated. Starting recreation")
-		err = r.recreateDeployment(mm, ci)
+		err = r.recreateDeployment(mm, ci, logger)
 		if err != nil {
 			return false, errors.Wrap(err, "failed to migrate Deployment")
 		}
@@ -112,7 +116,7 @@ func (r *ClusterInstallationReconciler) initializeMigration(ci *mattermostv1alph
 	return true, nil
 }
 
-func (r *ClusterInstallationReconciler) recreateDeployment(mm *mmv1beta.Mattermost, ci *mattermostv1alpha1.ClusterInstallation) error {
+func (r *ClusterInstallationReconciler) recreateDeployment(mm *mmv1beta.Mattermost, ci *mattermostv1alpha1.ClusterInstallation, logger logr.Logger) error {
 	oldDeploymentName := types.NamespacedName{Name: ci.Name, Namespace: ci.Namespace}
 	var oldDeployment appsv1.Deployment
 	err := r.Client.Get(context.TODO(), oldDeploymentName, &oldDeployment)
@@ -124,6 +128,11 @@ func (r *ClusterInstallationReconciler) recreateDeployment(mm *mmv1beta.Mattermo
 	err = r.Client.Delete(context.TODO(), &oldDeployment, client.PropagationPolicy(orphanPropagation))
 	if err != nil {
 		return errors.Wrap(err, "failed to delete old deployment")
+	}
+
+	err = r.waitForDeploymentDeletion(oldDeploymentName, logger)
+	if err != nil {
+		return errors.Wrap(err, "error while waiting for deployment deletion")
 	}
 
 	newLabels := mm.MattermostLabels(mm.Name)
@@ -139,13 +148,36 @@ func (r *ClusterInstallationReconciler) recreateDeployment(mm *mmv1beta.Mattermo
 	newDeployment.Spec.Selector = &v1.LabelSelector{MatchLabels: selectorLabels}
 	newDeployment.Spec.Template.Labels = newLabels
 
-	// TODO: with retries? As this is critical
 	err = r.Client.Create(context.TODO(), newDeployment)
 	if err != nil {
 		return errors.Wrap(err, "failed to create new Deployment")
 	}
 
 	return nil
+}
+
+func (r *ClusterInstallationReconciler) waitForDeploymentDeletion(name types.NamespacedName, logger logr.Logger) error {
+	timeout := time.After(1*time.Minute)
+
+	for {
+		var deployment appsv1.Deployment
+
+		err := r.NonCachedAPIReader.Get(context.TODO(), name, &deployment)
+		if err != nil && k8sErrors.IsNotFound(err) {
+			return nil
+		}
+		if err != nil {
+			// Log error but do not fail until timeout is reached
+			logger.Error(err, "failed to get old deployment while waiting for deletion")
+		}
+
+		select {
+		case <-timeout:
+			return fmt.Errorf("timeout waiting for deployment deletion")
+		default:
+			time.Sleep(2*time.Second)
+		}
+	}
 }
 
 func (r *ClusterInstallationReconciler) isDeploymentMigrated(mm *mmv1beta.Mattermost, ci *mattermostv1alpha1.ClusterInstallation) (bool, error) {
@@ -212,7 +244,6 @@ func (r *ClusterInstallationReconciler) cleanupReplicaSets(ci *mattermostv1alpha
 	for _, res := range replicaSets.Items {
 		err = r.Delete(context.TODO(), &res)
 		if err != nil {
-			// TODO: soft error with log only?
 			return errors.Wrap(err, "failed to remove old Replica Sets")
 		}
 	}

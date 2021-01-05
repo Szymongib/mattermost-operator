@@ -291,7 +291,12 @@ type ClusterInstallationStatus struct {
 
 	// The status of migration to Mattermost CR.
 	// +optional
-	Migration string `json:"migration,omitempty"`
+	Migration *MigrationStatus `json:"migration,omitempty"`
+}
+
+type MigrationStatus struct {
+	Status string `json:"status,omitempty"`
+	Error string `json:"error,omitempty"`
 }
 
 // +genclient
